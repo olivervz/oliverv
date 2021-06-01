@@ -13,6 +13,7 @@ const GithubButtonStyle = styled.button`
     background: #78948F;
     color: #A7C0BC;
     border: 0.4px solid #A7C0BC;
+    cursor: pointer;
   }
   transition: all .4s ease;
 `

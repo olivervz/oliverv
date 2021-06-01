@@ -4,8 +4,8 @@ import styled from 'styled-components'
 
 const FooterStyle = styled.ul`
   position: absolute;
-  top: 80vh;
-  left: 60vw;
+  top: 85vh;
+  left: 46vw;
   list-style-type: none;
 `
 const FooterItemStyle = styled.li`

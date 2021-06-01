@@ -2,7 +2,7 @@ import Main from './components/sections/Main'
 import Portfolio from './components/sections/Portfolio'
 import styled from 'styled-components'
 
-const StyledMainContainer = styled.div`
+const StyledContainer = styled.div`
   position:relative;
   top:0;
   left:0;
@@ -13,23 +13,15 @@ const StyledMainContainer = styled.div`
   background: #3B5954;
   margin: 0;
 `
-const StyledPortfolio = styled.div`
-  position:relative;
-  height: 100vh;
-  width: 100vw;
-  background: #A7C0BC;
-  margin: 0;
-`
-
 function App() {
   return (
     <>
-      <StyledMainContainer>
+      <StyledContainer>
         <Main />
-      </StyledMainContainer>
-      <StyledPortfolio>
+      </StyledContainer>
+      <StyledContainer>
         <Portfolio />
-      </StyledPortfolio>
+      </StyledContainer>
     </>
   );
 }

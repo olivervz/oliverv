@@ -12,6 +12,7 @@ const ResumeButtonStyle = styled.button`
     background: #3B5954;
     color: #A7C0BC;
     border: 0.4px solid #A7C0BC;
+    cursor: pointer;
   }
   transition: all .4s ease;
 

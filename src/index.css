@@ -20,6 +20,10 @@ body {
   padding: 0;
 }
 
+html, body {
+  overscroll-behavior: none;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
