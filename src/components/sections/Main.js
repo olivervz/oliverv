@@ -2,12 +2,13 @@ import React from 'react'
 import styled from 'styled-components'
 import EmailButton from '../EmailButton'
 import Header from '../Header'
+import Footer from '../Footer'
 
 const Intro = styled.div`
   position: relative;
-  top: 15vh;
-  left: 10vw;
-  width: 50vw;
+  top: 20vh;
+  left: 15vw;
+  width: max(300px, 40vw);
 `
 const IntroOne = styled.h2`
   /* Hi, my name is */
@@ -17,7 +18,7 @@ const IntroOne = styled.h2`
   font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
-  font-size: 25px;
+  font-size: max(15px, 1.5vw)
   line-height: 26px;
 
   color: #A7C0BC;
@@ -26,12 +27,12 @@ const IntroTwo = styled.h1`
   /* Oliver Vazquez */
 
   position: relative;
-  top: -25px;
+  top: 15px;
 
   font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
-  font-size: 65px;
+  font-size: max(40px, 5vw);
   line-height: 59px;
 
   /* identical to box height */
@@ -44,12 +45,12 @@ const IntroThree = styled.p`
   /* I am a Senior at ... */
 
   position: relative;
-  top: -50px;
+  top: 30px;
 
   font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
-  font-size: 25;
+  font-size: max(10px, 1.25vw);
   line-height: 26px;
 
   color: #A7C0BC;
@@ -57,7 +58,7 @@ const IntroThree = styled.p`
 
 const Main = () => {
   return (
-    <div>
+    <div style={{position: 'relative'}}>
       <Header />
       <Intro>
         <IntroOne>
@@ -74,6 +75,7 @@ const Main = () => {
         </IntroThree>
         <EmailButton />
       </Intro>
+      <Footer />
     </div>
   )
 }

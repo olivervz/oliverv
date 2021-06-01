@@ -6,9 +6,9 @@ const EmailButtonStyle = styled.button`
   /* Email Button */
 
   position: relative;
-  top: -50px;
   width: 210px;
   height: 40px;
+  top: 45px;
 
   background: #A7C0BC;
   border-radius: 4px;

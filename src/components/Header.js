@@ -7,7 +7,7 @@ import ResumeButton from './ResumeButton'
 const HeaderListStyle = styled.ul`
   position: absolute;
   right: 10vw;
-  top: 5vh;
+  top: 10vh;
   border: 1px solid #A7C0BC;
   border-radius: 4px;
   padding: 0px;
@@ -18,6 +18,7 @@ const HeaderListStyle = styled.ul`
 const HeaderItemStyle = styled.li`
   float: left;
   padding: 2px;
+
 `
 
 const Header = () => {
