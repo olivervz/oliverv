@@ -7,14 +7,14 @@ const Intro = styled.div`
   position: relative;
   top: 15vh;
   left: 10vw;
-  width: 45vw;
+  width: 50vw;
 `
 const IntroOne = styled.h2`
   /* Hi, my name is */
 
   position: relative;
 
-  font-family: Fira Code;
+  font-family: Montserrat;
   font-style: normal;
   font-weight: normal;
   font-size: 25px;
@@ -28,10 +28,10 @@ const IntroTwo = styled.h1`
   position: relative;
   top: -25px;
 
-  font-family: Fira Code;
+  font-family: Montserrat;
   font-style: normal;
   font-weight: normal;
-  font-size: 75px;
+  font-size: 65px;
   line-height: 59px;
 
   /* identical to box height */
@@ -46,7 +46,7 @@ const IntroThree = styled.p`
   position: relative;
   top: -50px;
 
-  font-family: Fira Code;
+  font-family: Montserrat;
   font-style: normal;
   font-weight: normal;
   font-size: 25;

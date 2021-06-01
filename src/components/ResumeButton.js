@@ -15,10 +15,10 @@ const ResumeButtonStyle = styled.button`
   }
   transition: all .4s ease;
 
-  font-family: Fira Code;
+  font-family: Montserrat;
   font-style: normal;
   font-weight: normal;
-  font-size: 20px;
+  font-size: 17px;
   line-height: 30px;
 
   color: #3B5954;

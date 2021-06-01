@@ -7,18 +7,18 @@ const EmailButtonStyle = styled.button`
 
   position: relative;
   top: -50px;
-  width: 190px;
-  height: 30px;
+  width: 210px;
+  height: 40px;
 
   background: #A7C0BC;
   border-radius: 4px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 
   /* Shoot me an email */
-  font-family: Fira Code;
+  font-family: Montserrat;
   font-style: normal;
   font-weight: normal;
-  font-size: 15px;
+  font-size: 17px;
 
   color: #3B5954;
 
