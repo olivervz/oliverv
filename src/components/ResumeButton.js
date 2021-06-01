@@ -15,7 +15,7 @@ const ResumeButtonStyle = styled.button`
   }
   transition: all .4s ease;
 
-  font-family: Montserrat;
+  font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
   font-size: 17px;

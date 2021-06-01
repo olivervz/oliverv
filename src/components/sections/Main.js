@@ -14,7 +14,7 @@ const IntroOne = styled.h2`
 
   position: relative;
 
-  font-family: Montserrat;
+  font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
   font-size: 25px;
@@ -28,7 +28,7 @@ const IntroTwo = styled.h1`
   position: relative;
   top: -25px;
 
-  font-family: Montserrat;
+  font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
   font-size: 65px;
@@ -46,7 +46,7 @@ const IntroThree = styled.p`
   position: relative;
   top: -50px;
 
-  font-family: Montserrat;
+  font-family: MontserratMedium;
   font-style: normal;
   font-weight: normal;
   font-size: 25;

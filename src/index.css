@@ -8,6 +8,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@font-face {
+  font-family: "MontserratMedium";
+  src: local("MontserratMedium"),
+   url("./fonts/Montserrat/Montserrat-Medium.ttf") format("truetype");
+  font-weight: medium;
+ }
+
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
