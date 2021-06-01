@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 const FooterStyle = styled.div`
   position: relative;
-  top: 61vh;
+  top: 60vh;
 `
 
 const FooterItemStyle2 = styled.div`
