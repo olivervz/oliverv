@@ -55,7 +55,7 @@ const DescriptionStyle = styled.p`
 const FooterStyle = styled.div`
   flex-direction: row;
 `;
-const SVGContainerStyle = styled.div`
+const GithubSVGContainerStyle = styled.div`
   /* github logo */
 
   display: inline-block;
@@ -64,8 +64,16 @@ const SVGContainerStyle = styled.div`
   height: 31px;
   top: 25px;
 `;
+const LinkSVGContainerStyle = styled.div`
+  /* link icon */
+  display: inline-block;
+  position: relative;
+  width: 30px;
+  height: 31px;
+  top: 25px;
+`;
 
-const GithubButtonStyle = styled.button`
+const ButtonStyle = styled.button`
   background: white;
   border: none;
 
@@ -79,7 +87,7 @@ const GithubButtonStyle = styled.button`
 const TechnologyStyle = styled.h3`
   position: relative;
   display: inline-block;
-  width: min(167px, 30vw);
+  width: min(167px, 20vw);
   height: 13px;
   top: 20px;
 
@@ -93,16 +101,16 @@ const TechnologyStyle = styled.h3`
   color: #3b5954;
 `;
 
-const Project = ({ title, description, technologies, link }) => {
+const Project = ({ title, description, technologies, githublink, link }) => {
   return (
     <ContainerStyle>
       <TitleStyle>{title}</TitleStyle>
       <DescriptionStyle>{description}</DescriptionStyle>
       <FooterStyle>
         <TechnologyStyle>{technologies}</TechnologyStyle>
-        <a href={link}>
-          <SVGContainerStyle>
-            <GithubButtonStyle>
+        <a href={githublink}>
+          <GithubSVGContainerStyle>
+            <ButtonStyle>
               <svg
                 width="26"
                 height="26"
@@ -115,9 +123,31 @@ const Project = ({ title, description, technologies, link }) => {
                   fill="#3B5954"
                 />
               </svg>
-            </GithubButtonStyle>
-          </SVGContainerStyle>
+            </ButtonStyle>
+          </GithubSVGContainerStyle>
         </a>
+        {link !== null ? (
+          <a href={link}>
+            <LinkSVGContainerStyle>
+              <ButtonStyle>
+                <svg
+                  width="21"
+                  height="24"
+                  viewBox="0 0 21 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M16.4512 23.2H2.70117C1.32046 23.2 0.201172 21.9464 0.201172 20.4V4.99999C0.201172 3.45359 1.32046 2.19999 2.70117 2.19999H7.70117V4.99999H2.70117V20.4H16.4512V14.8H18.9512V20.4C18.9512 21.9464 17.8319 23.2 16.4512 23.2ZM9.82617 14.3898L8.06367 12.4102L15.9299 3.59999H11.4512V0.799988H20.2012V10.6H17.7012V5.58099L9.82617 14.3898Z"
+                    fill="#3B5954"
+                  />
+                </svg>
+              </ButtonStyle>
+            </LinkSVGContainerStyle>
+          </a>
+        ) : (
+          ""
+        )}
       </FooterStyle>
     </ContainerStyle>
   );

@@ -27,7 +27,8 @@ const Projects = () => {
       title="Spotify Playlist App"
       description="Built a web app that allows users to generate fully random playlists that can be uploaded directly to their Spotify accounts.  "
       technologies="React Node.js Spotify API OAuth"
-      link="https://github.com/olivervz/Spotify-Playlist-App"
+      githublink="https://github.com/olivervz/Spotify-Playlist-App"
+      link={null}
     />
   );
   const PortfolioProject = (
@@ -36,16 +37,18 @@ const Projects = () => {
       title="Personal Website"
       description="My first crack at making a portfolio website from scratch. Also my first time using Figma."
       technologies="React Firebase Figma"
-      link="https://github.com/olivervz/oliverv"
+      githublink="https://github.com/olivervz/oliverv"
+      link='https://oliverv.firebaseapp.com'
     />
   );
   const WeatherProject = (
     <Project
       style={{ display: "inline-block" }}
-      title="Weather App"
+      title="Feels Like"
       description="A simple weather web app that displays weather information.  Uses the OpenWeather API for weather data, and the HERE Geocoder API to generate latitude and longitude coordinates from user input."
       technologies="React Firebase"
-      link="https://github.com/olivervz/feels-like"
+      githublink="https://github.com/olivervz/feels-like"
+      link='https://feels-like.firebaseapp.com'
     />
   );
   const PneumoniaProject = (
@@ -54,7 +57,8 @@ const Projects = () => {
       title="Pneumonia CNN"
       description="Artificial Intelligence term project.  Built a Convolutional Neural Network to identify the presence of Bacterial and Viral Pneumonia in chest X-rays."
       technologies="Python Tensorflow"
-      link="https://github.com/olivervz/Pneumonia-Neural-Network"
+      githublink="https://github.com/olivervz/Pneumonia-Neural-Network"
+      link='/documents/Pneumonia.pdf'
     />
   );
   const GreenswitchProject = (
@@ -63,7 +67,8 @@ const Projects = () => {
       title="Greenswitch"
       description="NASA Space Apps 2019 Hackathon Project.  Flask app that uses NASA APIs to provide the user with the optimal alternative energy option for their latitude and longitude"
       technologies="Python Flask"
-      link="https://github.com/olivervz/Greenswitch"
+      githublink="https://github.com/olivervz/Greenswitch"
+      link={null}
     />
   );
   const DesktopView = (
@@ -105,7 +110,7 @@ const Projects = () => {
   useEffect(() => {
     const handleResize = () => {
       console.log(window.innerWidth);
-      if (window.innerWidth < 850) {
+      if (window.innerWidth < 875) {
         setDesktopViewState(false);
       } else {
         setDesktopViewState(true);
