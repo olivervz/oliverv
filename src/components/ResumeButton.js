@@ -2,8 +2,8 @@ import React from 'react'
 import styled from 'styled-components'
 
 const ResumeButtonStyle = styled.button`
-  height: 6vh;
-  width: 12vh;
+  height: 49px;
+  width: 90px;
 
   background: #A7C0BC;
   border-radius: 4px;
@@ -18,7 +18,7 @@ const ResumeButtonStyle = styled.button`
   font-family: Fira Code;
   font-style: normal;
   font-weight: normal;
-  font-size: 2.7vh;
+  font-size: 20px;
   line-height: 30px;
 
   color: #3B5954;

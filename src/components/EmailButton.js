@@ -5,11 +5,10 @@ import { Link } from 'browser-router'
 const EmailButtonStyle = styled.button`
   /* Email Button */
 
-  position: absolute;
-  width: 18vw;
-  height: 5vh;
-  left: 10vw;
-  top: 54vh;
+  position: relative;
+  top: -50px;
+  width: 190px;
+  height: 30px;
 
   background: #A7C0BC;
   border-radius: 4px;
@@ -19,7 +18,7 @@ const EmailButtonStyle = styled.button`
   font-family: Fira Code;
   font-style: normal;
   font-weight: normal;
-  font-size: 2.5vh;
+  font-size: 15px;
 
   color: #3B5954;
 

@@ -2,12 +2,11 @@ import React from 'react'
 import styled from 'styled-components'
 import GithubButton from './GithubButton'
 import LinkedinButton from './LinkedinButton'
-import SpotifyButton from './SpotifyButton'
 import ResumeButton from './ResumeButton'
 
 const HeaderListStyle = styled.ul`
   position: absolute;
-  left: 75vw;
+  right: 10vw;
   top: 5vh;
   border: 1px solid #A7C0BC;
   border-radius: 4px;
@@ -18,7 +17,7 @@ const HeaderListStyle = styled.ul`
 `
 const HeaderItemStyle = styled.li`
   float: left;
-  padding: 0.3vh;
+  padding: 2px;
 `
 
 const Header = () => {
@@ -29,9 +28,6 @@ const Header = () => {
       </HeaderItemStyle>
       <HeaderItemStyle>
         <LinkedinButton />
-      </HeaderItemStyle>
-      <HeaderItemStyle>
-        <SpotifyButton />
       </HeaderItemStyle>
       <HeaderItemStyle>
         <ResumeButton />

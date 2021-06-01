@@ -4,18 +4,20 @@ import EmailButton from '../EmailButton'
 import Header from '../Header'
 
 const Intro = styled.div`
+  position: relative;
+  top: 15vh;
+  left: 10vw;
+  width: 45vw;
 `
 const IntroOne = styled.h2`
   /* Hi, my name is */
 
-  position: absolute;
-  left: 10vw;
-  top: 25vh;
+  position: relative;
 
   font-family: Fira Code;
   font-style: normal;
   font-weight: normal;
-  font-size: 2.5vh;
+  font-size: 25px;
   line-height: 26px;
 
   color: #A7C0BC;
@@ -23,14 +25,13 @@ const IntroOne = styled.h2`
 const IntroTwo = styled.h1`
   /* Oliver Vazquez */
 
-  position: absolute;
-  left: 10vw;
-  top: 27vh;
+  position: relative;
+  top: -25px;
 
   font-family: Fira Code;
   font-style: normal;
   font-weight: normal;
-  font-size: 7.5vh;
+  font-size: 75px;
   line-height: 59px;
 
   /* identical to box height */
@@ -42,15 +43,13 @@ const IntroTwo = styled.h1`
 const IntroThree = styled.p`
   /* I am a Senior at ... */
 
-  position: absolute;
-  width: 40vw;
-  left: 10vw;
-  top: 38vh;
+  position: relative;
+  top: -50px;
 
   font-family: Fira Code;
   font-style: normal;
   font-weight: normal;
-  font-size: 2.5;
+  font-size: 25;
   line-height: 26px;
 
   color: #A7C0BC;
@@ -73,8 +72,8 @@ const Main = () => {
           seeking a full-time Software Engineering position for 
           January of 2021.
         </IntroThree>
+        <EmailButton />
       </Intro>
-      <EmailButton />
     </div>
   )
 }
