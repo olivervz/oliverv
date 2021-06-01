@@ -10,6 +10,7 @@ const HeaderListStyle = styled.ul`
   left: 75vw;
   top: 5vh;
   border: 1px solid #A7C0BC;
+  border-radius: 4px;
   padding: 0px;
   box-sizing: border-box;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
