@@ -109,7 +109,6 @@ const Projects = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      console.log(window.innerWidth);
       if (window.innerWidth < 875) {
         setDesktopViewState(false);
       } else {
