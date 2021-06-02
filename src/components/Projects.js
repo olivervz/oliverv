@@ -26,7 +26,7 @@ const Projects = () => {
       style={{ display: "inline-block" }}
       title="Spotify Playlist App"
       description="Built a web app that allows users to generate fully random playlists that can be uploaded directly to their Spotify accounts.  "
-      technologies="React &nbsp;&nbsp;&nbsp;&nbsp; Node.js &nbsp;&nbsp;&nbsp;&nbsp; Spotify API &nbsp;&nbsp;&nbsp;&nbsp; OAuth "
+      technologies="React &nbsp;&nbsp;&nbsp; Node.js &nbsp;&nbsp;&nbsp; Spotify API &nbsp;&nbsp;&nbsp; OAuth "
       githublink="https://github.com/olivervz/Spotify-Playlist-App"
       link={null}
     />
@@ -36,7 +36,7 @@ const Projects = () => {
       style={{ display: "inline-block" }}
       title="Personal Website"
       description="My first crack at making a portfolio website from scratch. Also my first time using Figma."
-      technologies="React &nbsp;&nbsp;&nbsp;&nbsp; Firebase &nbsp;&nbsp;&nbsp;&nbsp; Figma"
+      technologies="React &nbsp;&nbsp;&nbsp; Firebase &nbsp;&nbsp;&nbsp; Figma"
       githublink="https://github.com/olivervz/oliverv"
       link="https://oliverv.firebaseapp.com"
     />
@@ -46,7 +46,7 @@ const Projects = () => {
       style={{ display: "inline-block" }}
       title="Feels Like"
       description="A simple weather web app that displays weather information.  Uses the OpenWeather API for weather data, and the HERE Geocoder API to generate latitude and longitude coordinates from user input."
-      technologies="React &nbsp;&nbsp;&nbsp;&nbsp; Firebase"
+      technologies="React &nbsp;&nbsp;&nbsp; Firebase"
       githublink="https://github.com/olivervz/feels-like"
       link="https://feels-like.firebaseapp.com"
     />
@@ -56,7 +56,7 @@ const Projects = () => {
       style={{ display: "inline-block" }}
       title="Pneumonia CNN"
       description="Artificial Intelligence term project.  Built a Convolutional Neural Network to identify the presence of Bacterial and Viral Pneumonia in chest X-rays."
-      technologies="Python &nbsp;&nbsp;&nbsp;&nbsp; Tensorflow"
+      technologies="Python &nbsp;&nbsp;&nbsp; Tensorflow"
       githublink="https://github.com/olivervz/Pneumonia-Neural-Network"
       link="/documents/Pneumonia.pdf"
     />
@@ -66,7 +66,7 @@ const Projects = () => {
       style={{ display: "inline-block" }}
       title="Greenswitch"
       description="NASA Space Apps 2019 Hackathon Project.  Flask app that uses NASA APIs to provide the user with the optimal alternative energy option for their latitude and longitude"
-      technologies="Python &nbsp;&nbsp;&nbsp;&nbsp; Flask"
+      technologies="Python &nbsp;&nbsp;&nbsp; Flask"
       githublink="https://github.com/olivervz/Greenswitch"
       link={null}
     />

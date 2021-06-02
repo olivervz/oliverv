@@ -96,7 +96,7 @@ const TechnologyStyle = styled.h3`
 
   font-family: MontserratThin;
   font-style: normal;
-  font-weight: 800;
+  font-weight: 1000;
   font-size: min(10px, 1.75vw);
   line-height: 12px;
   /* identical to box height */
