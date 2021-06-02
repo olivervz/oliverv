@@ -29,10 +29,10 @@ const TitleStyle = styled.h1`
   top: -20px;
   text-align: center;
 
-  font-family: MontserratMedium;
+  font-family: MontserratBold;
   font-style: normal;
   font-weight: 500;
-  font-size: min(20px, 3.2vw);
+  font-size: min(18px, 3.2vw);
   line-height: 24px;
 
   color: #3b5954;
@@ -54,6 +54,8 @@ const DescriptionStyle = styled.p`
 
 const FooterStyle = styled.div`
   flex-direction: row;
+  text-align: center;
+  width: min(197px, 30vw);
 `;
 const GithubSVGContainerStyle = styled.div`
   /* github logo */
@@ -87,13 +89,14 @@ const ButtonStyle = styled.button`
 const TechnologyStyle = styled.h3`
   position: relative;
   display: inline-block;
-  width: min(167px, 20vw);
+  // width: min(167px, 20vw);
+  // width: min(160px, 100vw);
   height: 13px;
   top: 20px;
 
-  font-family: MontserratMedium;
+  font-family: MontserratThin;
   font-style: normal;
-  font-weight: 500;
+  font-weight: 800;
   font-size: min(10px, 1.75vw);
   line-height: 12px;
   /* identical to box height */
@@ -106,8 +109,8 @@ const Project = ({ title, description, technologies, githublink, link }) => {
     <ContainerStyle>
       <TitleStyle>{title}</TitleStyle>
       <DescriptionStyle>{description}</DescriptionStyle>
+      <TechnologyStyle>{technologies}</TechnologyStyle>
       <FooterStyle>
-        <TechnologyStyle>{technologies}</TechnologyStyle>
         <a href={githublink}>
           <GithubSVGContainerStyle>
             <ButtonStyle>

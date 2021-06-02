@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import "./fonts/Montserrat/Montserrat-Medium.ttf";
+// import "./fonts/Montserrat/Montserrat-Medium.ttf";
 import App from "./App";
 
 ReactDOM.render(
