@@ -88,10 +88,11 @@ const ButtonStyle = styled.button`
 
 const TechnologyStyle = styled.h3`
   position: relative;
+  text-align: center;
+  vertical-align: middle;
   display: inline-block;
-  // width: min(167px, 20vw);
-  // width: min(160px, 100vw);
-  height: 13px;
+  width: min(167px, 30vw);
+  height: 20px;
   top: 20px;
 
   font-family: MontserratThin;
