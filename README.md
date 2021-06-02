@@ -1,6 +1,6 @@
 # Personal Website
 ## Under Construction
-### https://oliverv.firebaseapp.com
+### oliverv.xyz
 
 TODO:
 fix relative/absolutes
