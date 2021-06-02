@@ -1,6 +1,6 @@
-import React from 'react'
-import styled from 'styled-components'
-import { Link } from 'browser-router'
+import React from "react";
+import styled from "styled-components";
+import { Link } from "browser-router";
 
 const EmailButtonStyle = styled.button`
   /* Email Button */
@@ -10,7 +10,7 @@ const EmailButtonStyle = styled.button`
   height: 40px;
   top: 45px;
 
-  background: #A7C0BC;
+  background: #a7c0bc;
   border-radius: 4px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 
@@ -20,29 +20,27 @@ const EmailButtonStyle = styled.button`
   font-weight: normal;
   font-size: 17px;
 
-  color: #3B5954;
+  color: #3b5954;
 
-  border: 0.4px solid #3B5954;
+  border: 0.4px solid #3b5954;
 
   &:hover {
-    background-color: #3B5954;
-    color: #A7C0BC;
-    border: 0.4px solid #A7C0BC;
+    background-color: #3b5954;
+    color: #a7c0bc;
+    border: 0.4px solid #a7c0bc;
     cursor: pointer;
   }
-  transition: all .4s ease;
-`
-
+  transition: all 0.8s ease;
+`;
 
 const EmailButton = () => {
-
   return (
-    <a href='mailto:vazquez.o@northeastern.edu'>
-      <EmailButtonStyle href='mailto:vazquez.o@northeastern.edu'>
+    <a href="mailto:vazquez.o@northeastern.edu">
+      <EmailButtonStyle href="mailto:vazquez.o@northeastern.edu">
         Shoot me an Email
       </EmailButtonStyle>
     </a>
-  )
-}
+  );
+};
 
-export default EmailButton
+export default EmailButton;

@@ -38,7 +38,7 @@ const Projects = () => {
       description="My first crack at making a portfolio website from scratch. Also my first time using Figma."
       technologies="React Firebase Figma"
       githublink="https://github.com/olivervz/oliverv"
-      link='https://oliverv.firebaseapp.com'
+      link="https://oliverv.firebaseapp.com"
     />
   );
   const WeatherProject = (
@@ -48,7 +48,7 @@ const Projects = () => {
       description="A simple weather web app that displays weather information.  Uses the OpenWeather API for weather data, and the HERE Geocoder API to generate latitude and longitude coordinates from user input."
       technologies="React Firebase"
       githublink="https://github.com/olivervz/feels-like"
-      link='https://feels-like.firebaseapp.com'
+      link="https://feels-like.firebaseapp.com"
     />
   );
   const PneumoniaProject = (
@@ -58,7 +58,7 @@ const Projects = () => {
       description="Artificial Intelligence term project.  Built a Convolutional Neural Network to identify the presence of Bacterial and Viral Pneumonia in chest X-rays."
       technologies="Python Tensorflow"
       githublink="https://github.com/olivervz/Pneumonia-Neural-Network"
-      link='/documents/Pneumonia.pdf'
+      link="/documents/Pneumonia.pdf"
     />
   );
   const GreenswitchProject = (

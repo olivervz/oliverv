@@ -1,20 +1,20 @@
-import React from 'react'
-import styled from 'styled-components'
+import React from "react";
+import styled from "styled-components";
 
 const ResumeButtonStyle = styled.button`
   height: 49px;
   width: 90px;
 
-  background: #A7C0BC;
+  background: #a7c0bc;
   border-radius: 4px;
 
   &:hover {
-    background: #3B5954;
-    color: #A7C0BC;
-    border: 0.4px solid #A7C0BC;
+    background: #3b5954;
+    color: #a7c0bc;
+    border: 0.4px solid #a7c0bc;
     cursor: pointer;
   }
-  transition: all .4s ease;
+  transition: all 0.8s ease;
 
   font-family: MontserratMedium;
   font-style: normal;
@@ -22,17 +22,17 @@ const ResumeButtonStyle = styled.button`
   font-size: 17px;
   line-height: 30px;
 
-  color: #3B5954;
+  color: #3b5954;
 
   border: none;
-`
+`;
 
 const ResumeButton = () => {
   return (
-    <a href='/documents/Resume.pdf'>
+    <a href="/documents/Resume.pdf">
       <ResumeButtonStyle>Resume</ResumeButtonStyle>
     </a>
-  )
-}
+  );
+};
 
-export default ResumeButton
+export default ResumeButton;
