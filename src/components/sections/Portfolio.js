@@ -1,16 +1,15 @@
-import React from 'react'
-import styled from 'styled-components'
-import Projects from '../Projects'
+import React from "react";
+import styled from "styled-components";
+import Projects from "../Projects";
 
 const PortfolioContainer = styled.div`
   position: relative;
   width: 100vw;
   height: 100vh;
-
-`
+`;
 const HeaderStyle = styled.h1`
   text-align: center;
-  top: 300px;
+  padding-top: 75px;
 
   font-family: MontserratMedium;
   font-style: normal;
@@ -18,16 +17,18 @@ const HeaderStyle = styled.h1`
   font-size: max(20px, 2.5vw);
   line-height: 59px;
 
-  color: #A7C0BC
-`
+  color: #a7c0bc;
+`;
 
 const Portfolio = () => {
   return (
     <PortfolioContainer>
-      <HeaderStyle>Some Projects I've Done</HeaderStyle>
+      <HeaderStyle data-aos="zoom-in" data-aos-duration="100000">
+        Some Projects I've Done
+      </HeaderStyle>
       <Projects />
     </PortfolioContainer>
-  )
-}
+  );
+};
 
-export default Portfolio
+export default Portfolio;

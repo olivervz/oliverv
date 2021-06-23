@@ -71,17 +71,46 @@ const Projects = () => {
       link={null}
     />
   );
+  const projectAOSData = "zoom-in-up";
+  const projectAOSDuration = "1000";
+  const projectAOSDurationMiddle = "10000";
+  const projectAOSDurationBottom = "100000";
   const DesktopView = (
     <TableContainerStyle>
       <ProjectTableStyle>
         <TableRowStyle>
-          <TableItemStyle>{SpotifyProject}</TableItemStyle>
-          <TableItemStyle>{PortfolioProject}</TableItemStyle>
-          <TableItemStyle>{WeatherProject}</TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDuration}
+          >
+            {SpotifyProject}
+          </TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDuration}
+          >
+            {PortfolioProject}
+          </TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDuration}
+          >
+            {WeatherProject}
+          </TableItemStyle>
         </TableRowStyle>
         <TableRowStyle>
-          <TableItemStyle>{PneumoniaProject}</TableItemStyle>
-          <TableItemStyle>{GreenswitchProject}</TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationMiddle}
+          >
+            {PneumoniaProject}
+          </TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationMiddle}
+          >
+            {GreenswitchProject}
+          </TableItemStyle>
         </TableRowStyle>
       </ProjectTableStyle>
     </TableContainerStyle>
@@ -91,15 +120,40 @@ const Projects = () => {
     <TableContainerStyle>
       <ProjectTableStyle>
         <TableRowStyle>
-          <TableItemStyle>{SpotifyProject}</TableItemStyle>
-          <TableItemStyle>{PortfolioProject}</TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDuration}
+          >
+            {SpotifyProject}
+          </TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDuration}
+          >
+            {PortfolioProject}
+          </TableItemStyle>
         </TableRowStyle>
         <TableRowStyle>
-          <TableItemStyle>{WeatherProject}</TableItemStyle>
-          <TableItemStyle>{PneumoniaProject}</TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationMiddle}
+          >
+            {WeatherProject}
+          </TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationMiddle}
+          >
+            {PneumoniaProject}
+          </TableItemStyle>
         </TableRowStyle>
         <TableRowStyle>
-          <TableItemStyle>{GreenswitchProject}</TableItemStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationBottom}
+          >
+            {GreenswitchProject}
+          </TableItemStyle>
         </TableRowStyle>
       </ProjectTableStyle>
     </TableContainerStyle>
@@ -116,7 +170,8 @@ const Projects = () => {
       }
     };
     window.addEventListener("resize", handleResize);
-  });
+    handleResize();
+  }, []);
 
   return <>{desktopViewState ? DesktopView : MobileView}</>;
 };

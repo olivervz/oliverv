@@ -1,7 +1,6 @@
 import Main from "./components/sections/Main";
 import Portfolio from "./components/sections/Portfolio";
 import styled from "styled-components";
-
 const StyledContainer = styled.div`
   position: relative;
   top: 0;
