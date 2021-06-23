@@ -36,7 +36,8 @@ const IntroTwo = styled.h1`
   font-style: normal;
   font-weight: normal;
   font-size: max(40px, 5vw);
-  line-height: 59px;
+  // line-height: 59px;
+  line-height: 8vh;
 
   /* identical to box height */
 
@@ -54,7 +55,8 @@ const IntroThree = styled.p`
   font-style: normal;
   font-weight: normal;
   font-size: max(10px, 1.25vw);
-  line-height: 26px;
+  // line-height: 26px;
+  line-height: 3.5vh;
 
   color: #a7c0bc;
 `;
@@ -71,8 +73,8 @@ const Main = () => {
         <IntroTwo>Oliver Vazquez</IntroTwo>
         <IntroThree>
           I am a Senior at Northeastern University studying Computer Engineering
-          & Computer Science. I am actively seeking a full-time Software
-          Engineering position for January of 2021.
+          & Computer Science. I am actively seeking a full-time software
+          engineering position for January of 2022.
         </IntroThree>
         <EmailButton />
       </Intro>
