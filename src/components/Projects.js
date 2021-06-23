@@ -56,7 +56,7 @@ const Projects = () => {
       style={{ display: "inline-block" }}
       title="Pneumonia CNN"
       description="Artificial Intelligence term project.  Built a Convolutional Neural Network to identify the presence of Bacterial and Viral Pneumonia in chest X-rays."
-      technologies="Python &nbsp;&nbsp;&nbsp; Tensorflow"
+      technologies="Python &nbsp;&nbsp;&nbsp; Keras"
       githublink="https://github.com/olivervz/Pneumonia-Neural-Network"
       link="/documents/Pneumonia.pdf"
     />
