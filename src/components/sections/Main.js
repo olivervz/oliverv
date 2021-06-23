@@ -36,7 +36,6 @@ const IntroTwo = styled.h1`
   font-style: normal;
   font-weight: normal;
   font-size: max(40px, 5vw);
-  // line-height: 59px;
   line-height: 8vh;
 
   /* identical to box height */
@@ -55,7 +54,6 @@ const IntroThree = styled.p`
   font-style: normal;
   font-weight: normal;
   font-size: max(10px, 1.25vw);
-  // line-height: 26px;
   line-height: 3.5vh;
 
   color: #a7c0bc;
