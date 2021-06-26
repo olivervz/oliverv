@@ -71,6 +71,16 @@ const Projects = () => {
       link={null}
     />
   );
+  const TaskTrackerProject = (
+    <Project
+      style={{ display: "inline-block" }}
+      title="Task Tracker"
+      description="Chronological Task Tracker which allows users to log in and add, delete and update their tasks.  Front-end built using React and deployed on Firebase, back-end built using Node.js, Express, and MySQL, and deployed using Heroku"
+      technologies="React &nbsp;&nbsp;&nbsp; Node &nbsp;&nbsp;&nbsp; Express &nbsp;&nbsp;&nbsp; MySQL &nbsp;&nbsp;&nbsp; Firebase &nbsp;&nbsp;&nbsp; Heroku"
+      githublink="https://github.com/olivervz/task-tracker-app"
+      link={"https://task-list-tracker.web.app/"}
+    />
+  );
   const projectAOSData = "zoom-in-up";
   const projectAOSDuration = "1000";
   const projectAOSDurationMiddle = "10000";
@@ -89,16 +99,22 @@ const Projects = () => {
             data-aos={projectAOSData}
             data-aos-duration={projectAOSDuration}
           >
-            {PortfolioProject}
+            {TaskTrackerProject}
           </TableItemStyle>
           <TableItemStyle
             data-aos={projectAOSData}
             data-aos-duration={projectAOSDuration}
           >
-            {WeatherProject}
+            {PortfolioProject}
           </TableItemStyle>
         </TableRowStyle>
         <TableRowStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationMiddle}
+          >
+            {WeatherProject}
+          </TableItemStyle>
           <TableItemStyle
             data-aos={projectAOSData}
             data-aos-duration={projectAOSDurationMiddle}
@@ -128,17 +144,17 @@ const Projects = () => {
           </TableItemStyle>
           <TableItemStyle
             data-aos={projectAOSData}
-            data-aos-duration={projectAOSDuration}
+            data-aos-duration={projectAOSDurationMiddle}
           >
-            {PortfolioProject}
+            {TaskTrackerProject}
           </TableItemStyle>
         </TableRowStyle>
         <TableRowStyle>
           <TableItemStyle
             data-aos={projectAOSData}
-            data-aos-duration={projectAOSDurationMiddle}
+            data-aos-duration={projectAOSDuration}
           >
-            {WeatherProject}
+            {PortfolioProject}
           </TableItemStyle>
           <TableItemStyle
             data-aos={projectAOSData}
@@ -148,6 +164,12 @@ const Projects = () => {
           </TableItemStyle>
         </TableRowStyle>
         <TableRowStyle>
+          <TableItemStyle
+            data-aos={projectAOSData}
+            data-aos-duration={projectAOSDurationMiddle}
+          >
+            {WeatherProject}
+          </TableItemStyle>
           <TableItemStyle
             data-aos={projectAOSData}
             data-aos-duration={projectAOSDurationBottom}
