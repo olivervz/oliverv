@@ -2,8 +2,8 @@ import React from "react";
 import styled from "styled-components";
 
 const GithubButtonStyle = styled.button`
-    height: max(25px, calc((49 / 1440) * 100vw));
-    width: max(25px, calc((49 / 1440) * 100vw));
+    height: max(30px, calc((49 / 1440) * 100vw));
+    width: max(30px, calc((49 / 1440) * 100vw));
 
     background: #a7c0bc;
     border-radius: calc((4 / 1440) * 100vw);
@@ -19,8 +19,8 @@ const GithubButtonStyle = styled.button`
 `;
 
 const GithubSVGStyle = styled.svg`
-    width: max(15px, calc((32 / 1440) * 100vw));
-    height: max(15px, calc((32 / 1440) * 100vw));
+    width: max(20px, calc((32 / 1440) * 100vw));
+    height: max(20px, calc((32 / 1440) * 100vw));
 `;
 
 const GithubButton = () => {

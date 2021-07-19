@@ -21,7 +21,7 @@ const ContainerStyle = styled.div`
     transition: all 0.4s ease;
     box-shadow: calc((6 / 1440) * 100vw) calc((6 / 1440) * 100vw)
         calc((4 / 1440) * 100vw) rgba(0, 0, 0, 0.25);
-    border-radius: max(12px, calc((10 / 1440) * 100vw));
+    border-radius: max(9px, calc((10 / 1440) * 100vw));
 `;
 
 const TitleStyle = styled.h1`

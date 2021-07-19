@@ -2,8 +2,8 @@ import React from "react";
 import styled from "styled-components";
 
 const ResumeButtonStyle = styled.button`
-    height: max(25px, calc((49 / 1440) * 100vw));
-    width: max(46px, calc((90 / 1440) * 100vw));
+    height: max(30px, calc((49 / 1440) * 100vw));
+    width: max(52px, calc((90 / 1440) * 100vw));
 
     background: #a7c0bc;
     border-radius: calc((4 / 1440) * 100vw);
@@ -19,7 +19,7 @@ const ResumeButtonStyle = styled.button`
     font-family: MontserratMedium;
     font-style: normal;
     font-weight: normal;
-    font-size: max(9px, calc((17 / 1440) * 100vw));
+    font-size: max(11px, calc((17 / 1440) * 100vw));
     line-height: max(25px, calc((30 / 1440) * 100vw));
 
     color: #3b5954;

@@ -8,7 +8,7 @@ const HeaderListStyle = styled.ul`
     position: absolute;
     right: max(50px, calc((150 / 1440) * 100vw));
     top: max(50px, calc((75 / 1440) * 100vw));
-    border: calc((1 / 1440) * 100vw) solid #a7c0bc;
+    border: max(1px, calc((1 / 1440) * 100vw)) solid #a7c0bc;
     border-radius: calc((4 / 1440) * 100vw);
     padding: 0px;
     box-sizing: border-box;
