@@ -1,0 +1,136 @@
+---
+import MailIcon from "./icons/MailIcon.astro";
+import GithubIcon from "./icons/GithubIcon.astro";
+import LinkedinIcon from "./icons/LinkedinIcon.astro";
+import ResumeIcon from "./icons/ResumeIcon.astro";
+
+// Update these once — email/social links live in one place.
+const EMAIL = "you@example.com"; // TODO: replace with your real email
+const GITHUB_URL = "https://github.com/olivervz";
+const LINKEDIN_URL = "https://www.linkedin.com/in/YOUR-HANDLE"; // TODO: replace
+---
+
+<section class="hero">
+  <div class="line-mark accent-mark">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <div class="avatar" aria-hidden="true">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <circle cx="12" cy="8" r="4"></circle>
+      <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"></path>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <p class="eyebrow">Hi, my name is</p>
+    <h1>Oliver Vazquez</h1>
+    <div class="rule"></div>
+
+    <p class="bio">
+      I'm a software engineer who likes turning messy ideas into clean, working
+      things &mdash; this site included.
+      <em>[Update this line with what you're up to now.]</em>
+    </p>
+
+    <div class="actions">
+      <a href={`mailto:${EMAIL}`} class="btn">
+        <MailIcon />
+        Email me
+      </a>
+      <a href={GITHUB_URL} class="btn" target="_blank" rel="noopener noreferrer">
+        <GithubIcon />
+        GitHub
+      </a>
+      <a href={LINKEDIN_URL} class="btn" target="_blank" rel="noopener noreferrer">
+        <LinkedinIcon />
+        LinkedIn
+      </a>
+      <a href="/documents/Resume.pdf" class="btn" target="_blank" rel="noopener noreferrer">
+        <ResumeIcon />
+        Resume
+      </a>
+    </div>
+  </div>
+
+  <div class="footer-mark">oliverv.xyz</div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    padding: clamp(56px, 8vw, 96px) var(--gutter) 64px;
+    display: flex;
+    align-items: center;
+  }
+
+  .accent-mark {
+    position: absolute;
+    right: var(--gutter);
+    top: clamp(56px, 8vw, 96px);
+  }
+
+  .avatar {
+    position: absolute;
+    right: var(--gutter);
+    top: calc(clamp(56px, 8vw, 96px) + 84px);
+    width: 150px;
+    height: 150px;
+    border: 1.5px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    opacity: 0.9;
+  }
+
+  .hero-content {
+    max-width: 640px;
+  }
+
+  .hero-content h1 {
+    font-size: clamp(44px, 6.5vw, 84px);
+    line-height: 1.05;
+    color: var(--ink);
+  }
+
+  .bio {
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink);
+    opacity: 0.72;
+    max-width: 560px;
+    margin: 26px 0 0 0;
+  }
+
+  .bio em {
+    font-style: italic;
+  }
+
+  .actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+  }
+
+  .footer-mark {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 40px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.4;
+  }
+
+  @media (max-width: 780px) {
+    .avatar {
+      display: none;
+    }
+  }
+</style>

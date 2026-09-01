@@ -1,0 +1,60 @@
+---
+import ProjectCard from "./ProjectCard.astro";
+import { projects } from "../data/projects";
+---
+
+<section class="projects">
+  <div class="line-mark accent-mark">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <header>
+    <p class="eyebrow">Selected work</p>
+    <h2>Some Projects I've Done</h2>
+    <div class="rule"></div>
+  </header>
+
+  <div class="grid">
+    {projects.map((project) => <ProjectCard project={project} />)}
+  </div>
+</section>
+
+<style>
+  .projects {
+    position: relative;
+    padding: clamp(56px, 8vw, 96px) var(--gutter) 96px;
+  }
+
+  .accent-mark {
+    position: absolute;
+    right: var(--gutter);
+    top: clamp(56px, 8vw, 96px);
+  }
+
+  header h2 {
+    font-size: clamp(30px, 4vw, 46px);
+    color: var(--ink);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+    max-width: var(--content-max);
+    margin-top: 48px;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
