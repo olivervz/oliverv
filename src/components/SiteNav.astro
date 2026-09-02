@@ -38,4 +38,15 @@ const { current } = Astro.props;
   .links a[aria-current="page"] {
     color: var(--accent);
   }
+
+  /* the theme toggle (ThemeToggle.astro) is fixed at the same top-right
+     corner this nav's links end up sitting in on narrow screens — this
+     reserves room so "Photos"/"Work" don't render underneath it. The
+     extra 56px comfortably clears the toggle's ~40px circle plus its own
+     offset from the edge across the whole mobile width range. */
+  @media (max-width: 700px) {
+    .site-nav {
+      padding-right: calc(var(--gutter) + 56px);
+    }
+  }
 </style>

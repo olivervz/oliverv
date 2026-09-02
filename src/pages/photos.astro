@@ -389,6 +389,14 @@ for (const p of sorted) {
        site theme, so this is a fixed near-black. */
     background: rgba(8, 10, 10, 0.92);
     backdrop-filter: blur(11px);
+    /* without this, a touch-drag meant as a left/right swipe (handled by
+       our own JS below) also gets read by the browser as a page pan,
+       which is what caused the clunky vertical wobble/rubber-banding
+       while swiping between photos on mobile. This tells the browser to
+       leave all panning here to us. Body scroll is also locked in JS
+       while the lightbox is open, as a second guard against the same
+       thing. */
+    touch-action: none;
   }
 
   .lightbox[hidden] {
@@ -462,10 +470,18 @@ for (const p of sorted) {
       0 30px 70px rgba(0, 0, 0, 0.55);
   }
 
+  /* max-height: 100% here would be a percentage of this element's own
+     height, which is never a fixed value (it's sized by flexing to fit
+     its content) — so browsers just ignore it and let the image render
+     at full natural size. That's what was cutting photos off at the top
+     in landscape: a wide, short-viewport photo would render taller than
+     the screen with nothing capping it. Capping against the viewport
+     height directly (vh) instead of a percentage fixes that regardless
+     of orientation. */
   .lightbox-image img {
     display: block;
     max-width: 100%;
-    max-height: 100%;
+    max-height: min(70vh, calc(92vh - 96px));
     width: auto;
     height: auto;
     object-fit: contain;
@@ -515,6 +531,31 @@ for (const p of sorted) {
 
   .lightbox-notes:empty {
     display: none;
+  }
+
+  /* on narrow phones (portrait) and short viewports (landscape phones —
+     caught by max-height, since a landscape phone is plenty wide) the
+     caption was reading way too large relative to the available space,
+     crowding out the photo itself */
+  @media (max-width: 700px), (max-height: 500px) {
+    .lightbox-caption {
+      margin-top: 12px;
+      padding-top: 10px;
+    }
+
+    .lightbox-location {
+      font-size: 14px;
+    }
+
+    .lightbox-meta {
+      font-size: 11px;
+    }
+
+    .lightbox-notes {
+      font-size: 12px;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
   }
 </style>
 
@@ -710,8 +751,21 @@ for (const p of sorted) {
   const lightboxNotes = document.getElementById("lightbox-notes")!;
   const lightboxClose = document.getElementById("lightbox-close")!;
 
+  // stop the page behind the lightbox from scrolling — otherwise a touch
+  // drag meant as a left/right swipe between photos also drags the page
+  // up/down underneath, which is what made swiping feel clunky
+  function lockBodyScroll() {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+  }
+  function unlockBodyScroll() {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+  }
+
   function openLightbox(photo: Photo) {
     currentIndex = visiblePhotos.findIndex((p) => p.id === photo.id);
+    lockBodyScroll();
 
     lightboxImage.innerHTML = "";
     if (photo.image) {
@@ -743,6 +797,7 @@ for (const p of sorted) {
 
   function closeLightbox() {
     lightbox.hidden = true;
+    unlockBodyScroll();
   }
 
   lightboxClose.addEventListener("click", closeLightbox);
