@@ -1,0 +1,825 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteNav from "../components/SiteNav.astro";
+import { photos } from "../data/photos";
+
+const cameras = [...new Set(photos.map((p) => p.camera))].sort();
+const films = [...new Set(photos.map((p) => p.film))].sort();
+const locations = [...new Set(photos.map((p) => p.location))].sort();
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+// initial server render: oldest first, grouped by year, then by month
+// within each year. Ties (same YYYY-MM) break on `batch` — the order
+// rolls were tagged in — so two different rolls shot the same month
+// stay as two contiguous clusters instead of interleaving.
+const sorted = [...photos].sort(
+  (a, b) => a.date.localeCompare(b.date) || Number(a.batch) - Number(b.batch)
+);
+type MonthGroup = { month: string; items: typeof sorted };
+type YearGroup = { year: string; months: MonthGroup[] };
+const groups: YearGroup[] = [];
+for (const p of sorted) {
+  const year = p.date.slice(0, 4);
+  const month = p.date.length >= 7 ? p.date.slice(5, 7) : "";
+  let yearGroup = groups[groups.length - 1];
+  if (!yearGroup || yearGroup.year !== year) {
+    yearGroup = { year, months: [] };
+    groups.push(yearGroup);
+  }
+  let monthGroup = yearGroup.months[yearGroup.months.length - 1];
+  if (!monthGroup || monthGroup.month !== month) {
+    monthGroup = { month, items: [] };
+    yearGroup.months.push(monthGroup);
+  }
+  monthGroup.items.push(p);
+}
+---
+
+<Layout title="Photos — Oliver Vazquez" description="Photo log.">
+  <SiteNav current="photos" />
+
+  <section class="photos-page">
+    <header>
+      <h1>Photos</h1>
+      <p class="subhead">Mostly pictures of my friends, things I like, or other stuff</p>
+    </header>
+
+    <div class="controls">
+      <div class="filters">
+        <label class="field">
+          <span class="label">Camera</span>
+          <select id="filter-camera">
+            <option value="">All</option>
+            {cameras.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </label>
+        <label class="field">
+          <span class="label">Film</span>
+          <select id="filter-film">
+            <option value="">All</option>
+            {films.map((f) => <option value={f}>{f}</option>)}
+          </select>
+        </label>
+        <label class="field">
+          <span class="label">Location</span>
+          <select id="filter-location">
+            <option value="">All</option>
+            {locations.map((l) => <option value={l}>{l}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div class="sort-controls">
+        <button id="shuffle-btn" class="shuffle-btn" type="button" aria-label="Shuffle" title="Shuffle">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+        </button>
+        <div class="sort-toggle" role="group" aria-label="Sort order">
+          <button id="sort-oldest" class="active" type="button">Oldest first</button>
+          <button id="sort-newest" type="button">Newest first</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="photo-grid" class="photo-grid">
+      {groups.length === 0 && (
+        <p class="empty-state">
+          No photos yet — run <code>npm run tag-photos</code> to add some.
+        </p>
+      )}
+      {groups.map((g) => (
+        <div class="year-block" data-year={g.year}>
+          <div class="year-row">
+            <span class="num">{g.year}</span>
+            <span class="line"></span>
+          </div>
+          {g.months.map((m) => (
+            <>
+              {m.month && (
+                <p class="month-label">{MONTH_NAMES[parseInt(m.month, 10) - 1] ?? m.month}</p>
+              )}
+              <div class="tile-grid">
+                {m.items.map((p) => (
+                  <button
+                    type="button"
+                    class={`tile${p.image ? "" : " tile-color"}`}
+                    style={p.image ? undefined : `background:${p.color}`}
+                    data-id={p.id}
+                    aria-label={`${p.location}, ${p.date}`}
+                  >
+                    {p.image && <img src={p.image} alt="" loading="lazy" />}
+                  </button>
+                ))}
+              </div>
+            </>
+          ))}
+        </div>
+      ))}
+    </div>
+
+    <p class="hint">click a photo to see camera, film, location &amp; notes</p>
+  </section>
+
+  <div id="lightbox" class="lightbox" hidden>
+    <button id="lightbox-close" class="lightbox-close" aria-label="Close" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"></path></svg>
+    </button>
+    <div class="lightbox-content">
+      <div id="lightbox-image" class="lightbox-image"></div>
+      <div class="lightbox-caption">
+        <div id="lightbox-location" class="lightbox-location"></div>
+        <div id="lightbox-meta" class="lightbox-meta"></div>
+        <div id="lightbox-notes" class="lightbox-notes"></div>
+      </div>
+    </div>
+  </div>
+
+  <script
+    type="application/json"
+    id="photos-data"
+    set:html={JSON.stringify(photos).replace(/</g, "\\u003c")}
+  />
+</Layout>
+
+<style is:global>
+  /* global: the tile/year-block markup below is partly rebuilt client-side
+     (see the <script> below) via plain document.createElement calls, which
+     never receive Astro's scoped-style data-astro-cid attribute — so these
+     rules have to be unscoped or the JS-rebuilt tiles silently lose all
+     their sizing/layout CSS and collapse to native button size. */
+  .photos-page {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: clamp(24px, 5vw, 40px) var(--gutter) 40px;
+  }
+
+  header h1 {
+    font-size: clamp(30px, 4vw, 42px);
+    margin-top: 10px;
+  }
+
+  .subhead {
+    font-size: 15px;
+    opacity: 0.65;
+    margin-top: 12px;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 32px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .field select {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .field select:focus-visible {
+    outline: 2px solid var(--accent);
+  }
+
+  .sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .shuffle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.55;
+    cursor: pointer;
+    transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .shuffle-btn:hover {
+    opacity: 0.85;
+  }
+
+  .shuffle-btn.active {
+    background: var(--ink);
+    color: var(--bg);
+    opacity: 1;
+  }
+
+  .sort-toggle {
+    display: inline-flex;
+    border: 1px solid var(--ink);
+  }
+
+  .sort-toggle button {
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 16px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.55;
+    cursor: pointer;
+    font-family: var(--font);
+  }
+
+  .sort-toggle button.active {
+    background: var(--ink);
+    color: var(--bg);
+    opacity: 1;
+  }
+
+  .year-block {
+    margin-top: 34px;
+  }
+
+  .year-block:first-child {
+    margin-top: 28px;
+  }
+
+  .year-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .year-row .num {
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 20px;
+    opacity: 0.85;
+    white-space: nowrap;
+  }
+
+  .year-row .line {
+    flex: 1;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.25;
+  }
+
+  .month-label {
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    opacity: 0.4;
+    margin: 22px 0 10px;
+  }
+
+  .year-row + .month-label {
+    margin-top: 0;
+  }
+
+  /* a real grid, not CSS multi-column masonry: column-count lays tiles
+     out column-major (fills column 1 top-to-bottom, then column 2, ...),
+     which doesn't match reading order — it's why 7 photos could render
+     as 3/2/2 instead of 3/3/1, and why the DOM order (what arrow-key
+     navigation and shuffle use) didn't match the on-screen left-to-right
+     order. Grid's default flow is row-major, so DOM order === visual
+     order. Trade-off: each row's height is set by its tallest tile
+     (align-items: start keeps shorter tiles from being stretched/cropped
+     to match), so a row can leave empty space under a shorter photo —
+     that's the price of correct ordering. */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .tile-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* shuffle mode skips the year-block/year-row/month-label entirely (one
+     flat grid, no dividers), which otherwise contribute ~90px of space
+     above the first row of tiles (28px year-block top margin + ~40px
+     year-row + ~24px month-label) — add it back here so toggling shuffle
+     doesn't yank the grid upward. */
+  .shuffle-grid {
+    margin-top: 90px;
+  }
+
+  .tile {
+    display: block;
+    width: 100%;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s ease, opacity 0.4s ease, background-color 0.4s ease;
+  }
+
+  .tile img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* legacy color-only placeholder rows (no real image) have no natural
+     aspect ratio to fall back on, so give them a fixed one */
+  .tile.tile-color {
+    aspect-ratio: 4 / 5;
+  }
+
+  .tile:hover {
+    transform: scale(1.02);
+  }
+
+  .hint {
+    font-size: 13px;
+    opacity: 0.45;
+    margin-top: 36px;
+  }
+
+  .empty-state {
+    font-size: 14px;
+    opacity: 0.5;
+    padding: 40px 0;
+  }
+
+  .empty-state code {
+    font-family: monospace;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    padding: 2px 6px;
+  }
+
+  /* lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    /* deliberately NOT var(--ink) — in dark mode that variable flips to
+       the light cream color, which would make this backdrop light
+       instead of dark. A photo lightbox should stay dark regardless of
+       site theme, so this is a fixed near-black. */
+    background: rgba(8, 10, 10, 0.92);
+    backdrop-filter: blur(11px);
+  }
+
+  .lightbox[hidden] {
+    display: none;
+  }
+
+  /* Everything below is deliberately fixed light-on-dark, not themed off
+     --ink/--bg — the backdrop is always near-black now (see .lightbox
+     above), so the chrome sitting on top of it has to stay legible in
+     both site themes rather than flipping with them. */
+
+  .lightbox-close {
+    position: absolute;
+    right: 32px;
+    top: 32px;
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .lightbox-close:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+    color: #fff;
+  }
+
+  /* sized to hug the photo's own dimensions (never cropped), while
+     staying within the viewport: the image gets as much of that space
+     as it can, the caption takes whatever's left below it. */
+  .lightbox-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 94vw;
+    max-height: 92vh;
+    animation: lightbox-in 0.22s ease;
+  }
+
+  @keyframes lightbox-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* a thin, faint rim gives the photo an edge against the near-black
+     backdrop (otherwise dark areas of the image would bleed straight
+     into it), and the layered shadow underneath is what makes it read
+     as sitting above the backdrop rather than flat against it */
+  .lightbox-image {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.09),
+      0 10px 20px rgba(0, 0, 0, 0.4),
+      0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+
+  .lightbox-image img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  /* legacy color-only placeholder rows have no real image to size
+     against, so they still need an explicit box */
+  .lightbox-image.color-fallback {
+    flex: 0 0 auto;
+    width: min(100%, 480px);
+    aspect-ratio: 4 / 5;
+  }
+
+  /* no card, no box — just text sitting directly on the backdrop, so it
+     reads as part of the same dark surface instead of a bolted-on bar */
+  .lightbox-caption {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 520px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    text-align: center;
+  }
+
+  .lightbox-location {
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .lightbox-meta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.3px;
+    margin-top: 5px;
+  }
+
+  .lightbox-notes {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .lightbox-notes:empty {
+    display: none;
+  }
+</style>
+
+<script>
+  type Photo = {
+    id: string;
+    date: string;
+    batch: string;
+    camera: string;
+    film: string;
+    location: string;
+    notes: string;
+    image?: string;
+    color?: string;
+  };
+
+  const dataEl = document.getElementById("photos-data");
+  const photos: Photo[] = dataEl ? JSON.parse(dataEl.textContent || "[]") : [];
+
+  const grid = document.getElementById("photo-grid")!;
+  const cameraSelect = document.getElementById("filter-camera") as HTMLSelectElement;
+  const filmSelect = document.getElementById("filter-film") as HTMLSelectElement;
+  const locationSelect = document.getElementById("filter-location") as HTMLSelectElement;
+  const sortOldestBtn = document.getElementById("sort-oldest")!;
+  const sortNewestBtn = document.getElementById("sort-newest")!;
+  const shuffleBtn = document.getElementById("shuffle-btn")!;
+
+  let sortDir: "oldest" | "newest" | "shuffle" = "oldest";
+
+  // Fisher-Yates — doesn't mutate the input
+  function shuffleArray<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // the currently visible (filtered + sorted) photos, in display order —
+  // kept in sync by render() so the lightbox can step through them with
+  // the arrow keys regardless of what filters/sort are active
+  let visiblePhotos: Photo[] = [...photos].sort(
+    (a, b) => a.date.localeCompare(b.date) || Number(a.batch) - Number(b.batch)
+  );
+  let currentIndex = -1;
+
+  const MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+
+  function formatDate(date: string): string {
+    const [y, m] = date.split("-");
+    if (m) {
+      const idx = parseInt(m, 10) - 1;
+      return `${MONTHS[idx] ?? m} ${y}`;
+    }
+    return y;
+  }
+
+  function render() {
+    const camera = cameraSelect.value;
+    const film = filmSelect.value;
+    const location = locationSelect.value;
+
+    let filtered = photos.filter(
+      (p) =>
+        (!camera || p.camera === camera) &&
+        (!film || p.film === film) &&
+        (!location || p.location === location)
+    );
+
+    if (sortDir === "shuffle") {
+      filtered = shuffleArray(filtered);
+    } else {
+      // ties (same YYYY-MM) break on batch — the order rolls were tagged
+      // in — so two rolls shot the same month stay as two contiguous
+      // clusters instead of interleaving photo-by-photo
+      filtered.sort((a, b) => {
+        const dateCmp =
+          sortDir === "oldest" ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+        if (dateCmp !== 0) return dateCmp;
+        const batchCmp = Number(a.batch) - Number(b.batch);
+        return sortDir === "oldest" ? batchCmp : -batchCmp;
+      });
+    }
+    visiblePhotos = filtered;
+
+    // builds one <div class="tile-grid"> of photo buttons
+    function buildTileGrid(items: Photo[]): HTMLDivElement {
+      const tileGrid = document.createElement("div");
+      tileGrid.className = "tile-grid";
+      for (const p of items) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tile";
+        if (p.image) {
+          const img = document.createElement("img");
+          img.src = p.image;
+          img.alt = "";
+          img.loading = "lazy";
+          btn.appendChild(img);
+        } else {
+          btn.classList.add("tile-color");
+          btn.style.background = p.color ?? "";
+        }
+        btn.dataset.id = p.id;
+        btn.setAttribute("aria-label", `${p.location}, ${p.date}`);
+        btn.addEventListener("click", () => openLightbox(p));
+        tileGrid.appendChild(btn);
+      }
+      return tileGrid;
+    }
+
+    grid.innerHTML = "";
+
+    if (filtered.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty-state";
+      empty.textContent =
+        photos.length === 0
+          ? "No photos yet — run npm run tag-photos to add some."
+          : "No photos match these filters.";
+      grid.appendChild(empty);
+    } else if (sortDir === "shuffle") {
+      // shuffled order doesn't get year/month dividers — randomly
+      // interspersed one-photo groups would be more confusing than
+      // useful, so it's just one flat, ungrouped grid instead. It gets
+      // the .shuffle-grid class so CSS can add back the top space the
+      // (skipped) year/month header would otherwise have taken.
+      const tileGrid = buildTileGrid(filtered);
+      tileGrid.classList.add("shuffle-grid");
+      grid.appendChild(tileGrid);
+    } else {
+      type MonthGroup = { month: string; items: Photo[] };
+      type YearGroup = { year: string; months: MonthGroup[] };
+      const groups: YearGroup[] = [];
+      for (const p of filtered) {
+        const year = p.date.slice(0, 4);
+        const month = p.date.length >= 7 ? p.date.slice(5, 7) : "";
+        let yearGroup = groups[groups.length - 1];
+        if (!yearGroup || yearGroup.year !== year) {
+          yearGroup = { year, months: [] };
+          groups.push(yearGroup);
+        }
+        let monthGroup = yearGroup.months[yearGroup.months.length - 1];
+        if (!monthGroup || monthGroup.month !== month) {
+          monthGroup = { month, items: [] };
+          yearGroup.months.push(monthGroup);
+        }
+        monthGroup.items.push(p);
+      }
+
+      for (const g of groups) {
+        const block = document.createElement("div");
+        block.className = "year-block";
+        block.dataset.year = g.year;
+
+        const row = document.createElement("div");
+        row.className = "year-row";
+        row.innerHTML = `<span class="num">${g.year}</span><span class="line"></span>`;
+        block.appendChild(row);
+
+        for (const m of g.months) {
+          if (m.month) {
+            const label = document.createElement("p");
+            label.className = "month-label";
+            const idx = parseInt(m.month, 10) - 1;
+            label.textContent = MONTHS[idx] ?? m.month;
+            block.appendChild(label);
+          }
+          block.appendChild(buildTileGrid(m.items));
+        }
+        grid.appendChild(block);
+      }
+    }
+  }
+
+  // wire up the tiles that were rendered server-side, for the very first
+  // paint (before any filter/sort interaction triggers a client re-render)
+  function wireInitialTiles() {
+    grid.querySelectorAll<HTMLButtonElement>(".tile").forEach((btn) => {
+      const photo = photos.find((p) => p.id === btn.dataset.id);
+      if (photo) btn.addEventListener("click", () => openLightbox(photo));
+    });
+  }
+
+  const lightbox = document.getElementById("lightbox")!;
+  const lightboxImage = document.getElementById("lightbox-image")!;
+  const lightboxLocation = document.getElementById("lightbox-location")!;
+  const lightboxMeta = document.getElementById("lightbox-meta")!;
+  const lightboxNotes = document.getElementById("lightbox-notes")!;
+  const lightboxClose = document.getElementById("lightbox-close")!;
+
+  function openLightbox(photo: Photo) {
+    currentIndex = visiblePhotos.findIndex((p) => p.id === photo.id);
+
+    lightboxImage.innerHTML = "";
+    if (photo.image) {
+      lightboxImage.classList.remove("color-fallback");
+      lightboxImage.style.background = "";
+      const img = document.createElement("img");
+      img.src = photo.image;
+      img.alt = "";
+      lightboxImage.appendChild(img);
+    } else {
+      lightboxImage.classList.add("color-fallback");
+      lightboxImage.style.background = photo.color ?? "";
+    }
+    lightboxLocation.textContent = photo.location;
+    lightboxMeta.textContent = [formatDate(photo.date), photo.camera, photo.film]
+      .filter(Boolean)
+      .join(" · ");
+    lightboxNotes.textContent = photo.notes || "";
+    lightbox.hidden = false;
+  }
+
+  // steps to another photo in the currently visible (filtered/sorted) set,
+  // wrapping around at either end
+  function showPhotoAt(index: number) {
+    if (visiblePhotos.length === 0) return;
+    const wrapped = ((index % visiblePhotos.length) + visiblePhotos.length) % visiblePhotos.length;
+    openLightbox(visiblePhotos[wrapped]);
+  }
+
+  function closeLightbox() {
+    lightbox.hidden = true;
+  }
+
+  lightboxClose.addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (lightbox.hidden) return;
+    if (e.key === "Escape") {
+      closeLightbox();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      showPhotoAt(currentIndex - 1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      showPhotoAt(currentIndex + 1);
+    }
+  });
+
+  // swipe left/right to move between photos on touch devices
+  const SWIPE_THRESHOLD = 50; // px — below this it's a tap or a scroll, not a swipe
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  lightbox.addEventListener(
+    "touchstart",
+    (e) => {
+      const t = e.changedTouches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    },
+    { passive: true }
+  );
+
+  lightbox.addEventListener(
+    "touchend",
+    (e) => {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (dx < 0) {
+        showPhotoAt(currentIndex + 1); // swiped left → next photo
+      } else {
+        showPhotoAt(currentIndex - 1); // swiped right → previous photo
+      }
+    },
+    { passive: true }
+  );
+
+  cameraSelect.addEventListener("change", render);
+  filmSelect.addEventListener("change", render);
+  locationSelect.addEventListener("change", render);
+
+  sortOldestBtn.addEventListener("click", () => {
+    sortDir = "oldest";
+    sortOldestBtn.classList.add("active");
+    sortNewestBtn.classList.remove("active");
+    shuffleBtn.classList.remove("active");
+    render();
+  });
+  sortNewestBtn.addEventListener("click", () => {
+    sortDir = "newest";
+    sortNewestBtn.classList.add("active");
+    sortOldestBtn.classList.remove("active");
+    shuffleBtn.classList.remove("active");
+    render();
+  });
+  shuffleBtn.addEventListener("click", () => {
+    // re-shuffles even if already shuffled — every click is a fresh
+    // random order, not just a one-time toggle
+    sortDir = "shuffle";
+    shuffleBtn.classList.add("active");
+    sortOldestBtn.classList.remove("active");
+    sortNewestBtn.classList.remove("active");
+    render();
+  });
+
+  wireInitialTiles();
+</script>

@@ -4,16 +4,9 @@ import { projects } from "../data/projects";
 ---
 
 <section class="projects">
-  <div class="line-mark accent-mark">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-
   <header>
     <p class="eyebrow">Selected work</p>
     <h2>Some Projects I've Done</h2>
-    <div class="rule"></div>
   </header>
 
   <div class="grid">
@@ -23,27 +16,21 @@ import { projects } from "../data/projects";
 
 <style>
   .projects {
-    position: relative;
-    padding: clamp(56px, 8vw, 96px) var(--gutter) 96px;
-  }
-
-  .accent-mark {
-    position: absolute;
-    right: var(--gutter);
-    top: clamp(56px, 8vw, 96px);
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: clamp(32px, 6vw, 56px) var(--gutter) 96px;
   }
 
   header h2 {
-    font-size: clamp(30px, 4vw, 46px);
-    color: var(--ink);
+    font-size: clamp(30px, 4vw, 42px);
+    margin-top: 10px;
   }
 
   .grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 30px;
-    max-width: var(--content-max);
-    margin-top: 48px;
+    gap: 24px;
+    margin-top: 40px;
   }
 
   @media (max-width: 900px) {

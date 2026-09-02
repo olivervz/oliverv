@@ -1,0 +1,42 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteNav from "../components/SiteNav.astro";
+import Projects from "../components/Projects.astro";
+import ResumeIcon from "../components/icons/ResumeIcon.astro";
+---
+
+<Layout title="Work — Oliver Vazquez" description="Projects and resume.">
+  <SiteNav current="work" />
+
+  <div class="resume-row">
+    <a href="/documents/Resume.pdf" target="_blank" rel="noopener noreferrer" class="resume-link">
+      <ResumeIcon size={16} />
+      Download resume
+    </a>
+  </div>
+
+  <Projects />
+</Layout>
+
+<style>
+  .resume-row {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 32px) var(--gutter) 0;
+  }
+
+  .resume-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 9px 16px;
+    border: 1.5px solid var(--ink);
+  }
+
+  .resume-link:hover {
+    background: var(--ink);
+    color: var(--bg);
+  }
+</style>

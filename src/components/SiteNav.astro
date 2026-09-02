@@ -1,0 +1,41 @@
+---
+interface Props {
+  current?: "work" | "photos";
+}
+const { current } = Astro.props;
+---
+
+<nav class="site-nav">
+  <a href="/" class="wordmark">Oliver Vazquez</a>
+  <div class="links">
+    <a href="/work" aria-current={current === "work" ? "page" : undefined}>Work</a>
+    <a href="/photos" aria-current={current === "photos" ? "page" : undefined}>Photos</a>
+  </div>
+</nav>
+
+<style>
+  .site-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(24px, 5vw, 40px) var(--gutter) 0;
+    max-width: var(--content-max);
+    margin: 0 auto;
+  }
+
+  .wordmark {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .links {
+    display: flex;
+    gap: 24px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .links a[aria-current="page"] {
+    color: var(--accent);
+  }
+</style>

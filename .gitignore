@@ -21,3 +21,7 @@ npm-debug.log*
 .firebase/
 firebase-debug.log
 .firebaserc
+
+# raw photo dumps waiting to be tagged (npm run tag-photos) — the tagged
+# copies land in public/photos/ and get committed from there
+incoming-photos/
