@@ -1,5 +1,5 @@
 :root {
-  --bg: #ede6d8;
+  --bg: #d6e4f0;
   --ink: #3b5954;
   --accent: #7fa396;
   --grid-line: rgba(59, 89, 84, 0.08);
@@ -11,7 +11,7 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #243934;
+  --bg: #16283a;
   --ink: #ede6d8;
   --accent: #7fa396;
   --grid-line: rgba(237, 230, 216, 0.08);
