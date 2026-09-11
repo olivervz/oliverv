@@ -51,27 +51,39 @@ for (const p of sorted) {
 
     <div class="controls">
       <div class="filters">
-        <label class="field">
-          <span class="label">Camera</span>
-          <select id="filter-camera">
-            <option value="">All</option>
-            {cameras.map((c) => <option value={c}>{c}</option>)}
-          </select>
-        </label>
-        <label class="field">
-          <span class="label">Film</span>
-          <select id="filter-film">
-            <option value="">All</option>
-            {films.map((f) => <option value={f}>{f}</option>)}
-          </select>
-        </label>
-        <label class="field">
-          <span class="label">Location</span>
-          <select id="filter-location">
-            <option value="">All</option>
-            {locations.map((l) => <option value={l}>{l}</option>)}
-          </select>
-        </label>
+        <div class="field select-field" data-filter="camera">
+          <button type="button" class="field-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="label">Camera</span>
+            <span class="field-value">All</span>
+            <svg class="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"></path></svg>
+          </button>
+          <ul class="field-menu" role="listbox" hidden>
+            <li role="option" data-value="" aria-selected="true">All</li>
+            {cameras.map((c) => <li role="option" data-value={c} aria-selected="false">{c}</li>)}
+          </ul>
+        </div>
+        <div class="field select-field" data-filter="film">
+          <button type="button" class="field-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="label">Film</span>
+            <span class="field-value">All</span>
+            <svg class="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"></path></svg>
+          </button>
+          <ul class="field-menu" role="listbox" hidden>
+            <li role="option" data-value="" aria-selected="true">All</li>
+            {films.map((f) => <li role="option" data-value={f} aria-selected="false">{f}</li>)}
+          </ul>
+        </div>
+        <div class="field select-field" data-filter="location">
+          <button type="button" class="field-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="label">Location</span>
+            <span class="field-value">All</span>
+            <svg class="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"></path></svg>
+          </button>
+          <ul class="field-menu" role="listbox" hidden>
+            <li role="option" data-value="" aria-selected="true">All</li>
+            {locations.map((l) => <li role="option" data-value={l} aria-selected="false">{l}</li>)}
+          </ul>
+        </div>
       </div>
 
       <div class="sort-controls">
@@ -189,17 +201,85 @@ for (const p of sorted) {
     flex-wrap: wrap;
   }
 
-  .field select {
-    appearance: none;
-    border: none;
-    background: transparent;
+  /* custom dropdown replacing the native <select> — the closed "pill"
+     look was already fine (that's just .field below); the native
+     dropdown *panel* that used to open under it was unstyleable OS
+     chrome (grey on most platforms, ignores our theme entirely), so
+     this is a real, from-scratch listbox instead. */
+  .select-field {
+    position: relative;
+  }
+
+  .field-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid var(--ink);
     font: inherit;
+    font-weight: 500;
+    font-size: 14px;
     color: inherit;
+    background: transparent;
     cursor: pointer;
   }
 
-  .field select:focus-visible {
+  .field-trigger:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .field-trigger:focus-visible {
     outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .field-value {
+    font-weight: 500;
+  }
+
+  .chevron {
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+  }
+
+  .select-field.open .chevron {
+    transform: rotate(180deg);
+  }
+
+  .field-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 10;
+    min-width: 100%;
+    max-height: 260px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--bg);
+    border: 1px solid var(--ink);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  }
+
+  .field-menu li {
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .field-menu li:hover {
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+
+  .field-menu li[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--bg);
   }
 
   .sort-controls {
@@ -228,6 +308,17 @@ for (const p of sorted) {
 
   .shuffle-btn.active {
     background: var(--ink);
+    color: var(--bg);
+    opacity: 1;
+  }
+
+  /* momentary click feedback, distinct from .active's persistent "we're
+     in shuffle mode" color — this one is only ever on for 2s (see the
+     click handler below) and eases back off via the site-wide
+     background-color/color transition already defined near the top of
+     this file, no separate transition needed here */
+  .shuffle-btn.flash {
+    background: var(--accent);
     color: var(--bg);
     opacity: 1;
   }
@@ -610,9 +701,6 @@ for (const p of sorted) {
   const photos: Photo[] = dataEl ? JSON.parse(dataEl.textContent || "[]") : [];
 
   const grid = document.getElementById("photo-grid")!;
-  const cameraSelect = document.getElementById("filter-camera") as HTMLSelectElement;
-  const filmSelect = document.getElementById("filter-film") as HTMLSelectElement;
-  const locationSelect = document.getElementById("filter-location") as HTMLSelectElement;
   const sortOldestBtn = document.getElementById("sort-oldest")!;
   const sortNewestBtn = document.getElementById("sort-newest")!;
   const shuffleBtn = document.getElementById("shuffle-btn")!;
@@ -637,6 +725,100 @@ for (const p of sorted) {
   // order too — no separate bookkeeping needed to keep the two in sync.
   let visiblePhotos: Photo[] = [];
   let currentIndex = -1;
+
+  // ---------- custom filter dropdowns ----------
+  //
+  // Replaces the native <select> elements: the closed "pill" look was
+  // fine with plain CSS, but the *open* dropdown panel is OS-native
+  // chrome that ignores page styling almost everywhere (the "boring
+  // grey"), so this is a small from-scratch listbox instead — a button
+  // that toggles a styled <ul role="listbox"> underneath it.
+
+  const FILTER_KEYS = ["camera", "film", "location"] as const;
+  type FilterKey = (typeof FILTER_KEYS)[number];
+
+  const filterState: Record<FilterKey, string> = { camera: "", film: "", location: "" };
+  const filterFields: Record<FilterKey, HTMLElement> = {
+    camera: document.querySelector('[data-filter="camera"]')!,
+    film: document.querySelector('[data-filter="film"]')!,
+    location: document.querySelector('[data-filter="location"]')!,
+  };
+
+  function matchesFilters(p: Photo): boolean {
+    return (
+      (!filterState.camera || p.camera === filterState.camera) &&
+      (!filterState.film || p.film === filterState.film) &&
+      (!filterState.location || p.location === filterState.location)
+    );
+  }
+
+  function syncFieldDisplay(key: FilterKey) {
+    const field = filterFields[key];
+    const value = filterState[key];
+    field.querySelector(".field-value")!.textContent = value || "All";
+    field.querySelectorAll("[role='option']").forEach((li) => {
+      li.setAttribute("aria-selected", String((li as HTMLElement).dataset.value === value));
+    });
+  }
+
+  function closeAllMenus() {
+    for (const key of FILTER_KEYS) {
+      const field = filterFields[key];
+      field.classList.remove("open");
+      field.querySelector(".field-trigger")!.setAttribute("aria-expanded", "false");
+      (field.querySelector(".field-menu") as HTMLElement).hidden = true;
+    }
+  }
+
+  function selectFilterValue(key: FilterKey, value: string) {
+    filterState[key] = value;
+
+    // the filter the user just touched is their explicit new intent —
+    // if combining it with whatever else is currently set would leave
+    // nothing to show, drop every *other* active filter instead of
+    // showing an empty grid. Every value in these dropdowns comes from
+    // an actual photo, so filtering on just this one key alone can
+    // never itself be empty.
+    if (value !== "" && !photos.some(matchesFilters)) {
+      for (const otherKey of FILTER_KEYS) {
+        if (otherKey !== key) filterState[otherKey] = "";
+      }
+    }
+
+    for (const k of FILTER_KEYS) syncFieldDisplay(k);
+    closeAllMenus();
+    render();
+  }
+
+  for (const key of FILTER_KEYS) {
+    const field = filterFields[key];
+    const trigger = field.querySelector(".field-trigger") as HTMLButtonElement;
+    const menu = field.querySelector(".field-menu") as HTMLElement;
+
+    trigger.addEventListener("click", () => {
+      const wasOpen = !menu.hidden;
+      closeAllMenus();
+      if (!wasOpen) {
+        field.classList.add("open");
+        trigger.setAttribute("aria-expanded", "true");
+        menu.hidden = false;
+      }
+    });
+
+    menu.addEventListener("click", (e) => {
+      const li = (e.target as HTMLElement).closest("[role='option']") as HTMLElement | null;
+      if (li) selectFilterValue(key, li.dataset.value ?? "");
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    const target = e.target as Node;
+    if (!FILTER_KEYS.some((k) => filterFields[k].contains(target))) closeAllMenus();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAllMenus();
+  });
 
   const MONTHS = [
     "January", "February", "March", "April", "May", "June",
@@ -743,9 +925,25 @@ for (const p of sorted) {
         const companionsWidth = companions.reduce((sum, t) => sum + t.w, 0);
         const gapCount = companions.length; // one gap before each companion
         const remaining = containerWidth - GAP * gapCount - companionsWidth;
-        // a floor keeps a freak near-full companion set from crushing the
-        // portrait down to nothing
-        portraitTile.w = Math.max(remaining, pinnedHeight * 0.2);
+        // the portrait's own natural (uncropped) width at pinnedHeight —
+        // capping it here guarantees its box is never proportionally
+        // *wider* than the photo itself, which is what forces
+        // object-fit: cover to crop only off the sides (or nothing, if
+        // it lands exactly at this width) and never off the top/bottom.
+        // A floor still keeps a freak near-full companion set from
+        // crushing it down to nothing.
+        const naturalPortraitWidth = pinnedHeight * (w / h);
+        portraitTile.w = Math.min(Math.max(remaining, pinnedHeight * 0.2), naturalPortraitWidth);
+        // capping the portrait below `remaining` can leave the row a
+        // little short of flush — hand that leftover to its last
+        // companion instead. A gentle top/bottom crop on an ordinary
+        // landscape photo (which usually has headroom to spare) is far
+        // less noticeable than one on a portrait subject, and this keeps
+        // every row on the page exactly as flush as every other.
+        const leftover = remaining - portraitTile.w;
+        if (leftover > 0.5 && companions.length > 0) {
+          companions[companions.length - 1].w += leftover;
+        }
         rows.push({ tiles: [portraitTile, ...companions], pinned: true });
         continue;
       }
@@ -838,16 +1036,7 @@ for (const p of sorted) {
   }
 
   function render() {
-    const camera = cameraSelect.value;
-    const film = filmSelect.value;
-    const location = locationSelect.value;
-
-    let filtered = photos.filter(
-      (p) =>
-        (!camera || p.camera === camera) &&
-        (!film || p.film === film) &&
-        (!location || p.location === location)
-    );
+    let filtered = photos.filter(matchesFilters);
 
     if (sortDir === "shuffle") {
       filtered = shuffleArray(filtered);
@@ -1046,10 +1235,6 @@ for (const p of sorted) {
     { passive: true }
   );
 
-  cameraSelect.addEventListener("change", render);
-  filmSelect.addEventListener("change", render);
-  locationSelect.addEventListener("change", render);
-
   sortOldestBtn.addEventListener("click", () => {
     sortDir = "oldest";
     sortOldestBtn.classList.add("active");
@@ -1068,6 +1253,8 @@ for (const p of sorted) {
     shuffleBtn.setAttribute("aria-label", "Shuffle");
     render();
   });
+  let shuffleFlashTimer: ReturnType<typeof setTimeout> | undefined;
+
   shuffleBtn.addEventListener("click", () => {
     // re-shuffles even if already shuffled — every click is a fresh
     // random order, not just a one-time toggle
@@ -1087,6 +1274,17 @@ for (const p of sorted) {
     shuffleBtn.classList.remove("spin");
     void shuffleBtn.offsetWidth;
     shuffleBtn.classList.add("spin");
+
+    // momentary click feedback: flash the accent color immediately, then
+    // fade back (via the site-wide color transition) after 2s. Restart
+    // the same way as the spin above so back-to-back clicks each get
+    // their own full 2s, rather than the first click's timer cutting a
+    // later flash short.
+    clearTimeout(shuffleFlashTimer);
+    shuffleBtn.classList.remove("flash");
+    void shuffleBtn.offsetWidth;
+    shuffleBtn.classList.add("flash");
+    shuffleFlashTimer = setTimeout(() => shuffleBtn.classList.remove("flash"), 2000);
   });
 
   // justified-row widths depend on the container's actual pixel width,
