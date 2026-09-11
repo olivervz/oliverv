@@ -28,6 +28,16 @@ Built around a whole roll at a time, in two passes:
 
 Each tagged photo is resized and recompressed (originals are left alone — never overwritten, never moved) down to 2400px on the long edge at JPEG quality 85 before landing in `public/photos/`, and appended as a row to `src/data/photos.csv`, which `src/data/photos.ts` reads at build/dev time — so `npm run dev` picks up new photos immediately, no other changes needed. That's still sharper than a browser will ever render it, so there's no visible quality loss, but it cuts a typical 6-9MB scanner export down to well under 1MB — the difference between a repo that stays small and one that balloons every time you tag a roll. `incoming-photos/` is gitignored; only the copies in `public/photos/` get committed.
 
+## Fixing a photo's crop/tilt later
+
+If you tagged a photo before straightening or recropping it, `npm run review-photos` opens a local, private thumbnail grid (`http://localhost:4848` — not part of the built site, not reachable by anyone else, only runs while the command is running):
+
+```bash
+npm run review-photos
+```
+
+Click a photo's flag icon to mark it "needs fixing" for later — that's just a hidden `flagged` column in `photos.csv`, never shown on the site. Drag a corrected image file onto **any** photo (flagged or not) to swap it in immediately: it goes through the same resize/recompress step as `tag-photos.mjs` and overwrites the file in `public/photos/` under its existing name, so every other column in that row (date, batch, title, camera, film, location, notes) is left exactly as-is — only the pixels change. A successful replace clears the flag automatically.
+
 ## Local setup
 
 ```bash
@@ -68,6 +78,8 @@ npm run deploy
 ```
 scripts/
   tag-photos.mjs            # npm run tag-photos — see "Adding real photos" above
+  review-photos.mjs         # npm run review-photos — see "Fixing a photo's crop/tilt later" above
+  review-photos.html        # the page review-photos.mjs serves (local only, not part of the built site)
 src/
   data/
     projects.ts           # project list — edit to add/remove projects

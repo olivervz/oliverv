@@ -12,12 +12,13 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-// initial server render: oldest first, grouped by year, then by month
+// initial server render: newest first, grouped by year, then by month
 // within each year. Ties (same YYYY-MM) break on `batch` — the order
-// rolls were tagged in — so two different rolls shot the same month
-// stay as two contiguous clusters instead of interleaving.
+// rolls were tagged in, most-recently-tagged first to match "newest" —
+// so two different rolls shot the same month stay as two contiguous
+// clusters instead of interleaving.
 const sorted = [...photos].sort(
-  (a, b) => a.date.localeCompare(b.date) || Number(a.batch) - Number(b.batch)
+  (a, b) => b.date.localeCompare(a.date) || Number(b.batch) - Number(a.batch)
 );
 type MonthGroup = { month: string; items: typeof sorted };
 type YearGroup = { year: string; months: MonthGroup[] };
@@ -84,8 +85,8 @@ for (const p of sorted) {
           </svg>
         </button>
         <div class="sort-toggle" role="group" aria-label="Sort order">
-          <button id="sort-oldest" class="active" type="button">Oldest first</button>
-          <button id="sort-newest" type="button">Newest first</button>
+          <button id="sort-oldest" type="button">Oldest first</button>
+          <button id="sort-newest" class="active" type="button">Newest first</button>
         </div>
       </div>
     </div>
@@ -152,7 +153,7 @@ for (const p of sorted) {
 
 <style is:global>
   /* global: the tile/year-block markup below is partly rebuilt client-side
-     (see the <script> below) via plain document.createElement calls, which
+     (see the script block below) via plain document.createElement calls, which
      never receive Astro's scoped-style data-astro-cid attribute — so these
      rules have to be unscoped or the JS-rebuilt tiles silently lose all
      their sizing/layout CSS and collapse to native button size. */
@@ -231,6 +232,26 @@ for (const p of sorted) {
     opacity: 1;
   }
 
+  /* spins the icon on every press — the repeatable motion is what signals
+     "this can be pressed again for another shuffle", not just a one-shot
+     toggle switching on */
+  @keyframes shuffle-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .shuffle-btn svg {
+    transform: rotate(0deg);
+  }
+
+  .shuffle-btn.spin svg {
+    animation: shuffle-spin 0.5s ease;
+  }
+
   .sort-toggle {
     display: inline-flex;
     border: 1px solid var(--ink);
@@ -298,16 +319,14 @@ for (const p of sorted) {
     margin-top: 0;
   }
 
-  /* a real grid, not CSS multi-column masonry: column-count lays tiles
-     out column-major (fills column 1 top-to-bottom, then column 2, ...),
-     which doesn't match reading order — it's why 7 photos could render
-     as 3/2/2 instead of 3/3/1, and why the DOM order (what arrow-key
-     navigation and shuffle use) didn't match the on-screen left-to-right
-     order. Grid's default flow is row-major, so DOM order === visual
-     order. Trade-off: each row's height is set by its tallest tile
-     (align-items: start keeps shorter tiles from being stretched/cropped
-     to match), so a row can leave empty space under a shorter photo —
-     that's the price of correct ordering. */
+  /* Justified rows (see layoutJustified() below) are computed in JS, not
+     CSS — a browser has to know the container's actual pixel width to
+     scale each row to fill it edge to edge, which isn't knowable at
+     build time or expressible in pure CSS. So this grid rule is only
+     ever seen for the briefest instant before the client script below
+     runs render() and replaces it with absolutely-positioned tiles (see
+     buildTileGrid()) — kept as a reasonable fallback for that instant
+     (and for no-JS) rather than left blank. */
   .tile-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -333,27 +352,39 @@ for (const p of sorted) {
   .tile {
     display: block;
     width: 100%;
+    aspect-ratio: 3 / 2;
     border: none;
     padding: 0;
     cursor: pointer;
     overflow: hidden;
-    transition: transform 0.2s ease, opacity 0.4s ease, background-color 0.4s ease;
+    transition: transform 0.2s ease, opacity 0.4s ease;
   }
 
+  /* JS sets each tile's actual box size (see buildTileGrid()): natural
+     height for an ordinary photo, capped for an outlier-tall one. Either
+     way object-fit: cover fills that exact box — when the box already
+     matches the image's own aspect ratio (the ordinary case) cover
+     crops nothing at all; it only ever trims a capped tile, and only
+     off the top/bottom (the box is always full column width). */
   .tile img {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
   }
 
-  /* legacy color-only placeholder rows (no real image) have no natural
-     aspect ratio to fall back on, so give them a fixed one */
+  /* legacy color-only placeholder rows (no real image, no width/height
+     on file) have no natural aspect ratio to fall back on */
   .tile.tile-color {
     aspect-ratio: 4 / 5;
   }
 
   .tile:hover {
     transform: scale(1.02);
+    /* tiles are absolutely positioned edge-to-edge by JS (no grid gap
+       cushion between them anymore), so a hover-scaled tile needs to sit
+       above its neighbors or the zoom clips against them */
+    z-index: 2;
   }
 
   .hint {
@@ -564,11 +595,14 @@ for (const p of sorted) {
     id: string;
     date: string;
     batch: string;
+    title: string;
     camera: string;
     film: string;
     location: string;
     notes: string;
     image?: string;
+    width?: number;
+    height?: number;
     color?: string;
   };
 
@@ -583,7 +617,7 @@ for (const p of sorted) {
   const sortNewestBtn = document.getElementById("sort-newest")!;
   const shuffleBtn = document.getElementById("shuffle-btn")!;
 
-  let sortDir: "oldest" | "newest" | "shuffle" = "oldest";
+  let sortDir: "oldest" | "newest" | "shuffle" = "newest";
 
   // Fisher-Yates — doesn't mutate the input
   function shuffleArray<T>(arr: T[]): T[] {
@@ -597,10 +631,11 @@ for (const p of sorted) {
 
   // the currently visible (filtered + sorted) photos, in display order —
   // kept in sync by render() so the lightbox can step through them with
-  // the arrow keys regardless of what filters/sort are active
-  let visiblePhotos: Photo[] = [...photos].sort(
-    (a, b) => a.date.localeCompare(b.date) || Number(a.batch) - Number(b.batch)
-  );
+  // the arrow keys/swipe regardless of what filters/sort are active.
+  // Justified-row layout (see buildTileGrid) fills strictly in this same
+  // order, row by row, left to right, so this doubles as visual reading
+  // order too — no separate bookkeeping needed to keep the two in sync.
+  let visiblePhotos: Photo[] = [];
   let currentIndex = -1;
 
   const MONTHS = [
@@ -615,6 +650,191 @@ for (const p of sorted) {
       return `${MONTHS[idx] ?? m} ${y}`;
     }
     return y;
+  }
+
+  // ---------- justified-row layout ----------
+
+  const GAP = 14; // px between tiles, matches the old CSS grid gap
+  // standard 35mm landscape frame (3:2) — used only to pick a reasonable
+  // *target* row height (see buildTileGrid) and as the fallback aspect
+  // for a real photo that's somehow missing its stored width/height
+  const REFERENCE_ASPECT = 3 / 2;
+
+  function naturalAspect(photo: Photo): { w: number; h: number } {
+    if (photo.width && photo.height) return { w: photo.width, h: photo.height };
+    // every real (image-backed) photo has stored dimensions as of this
+    // build — this branch is just a safety net, not the normal path
+    if (photo.image) return { w: 3, h: 2 };
+    // legacy color-only placeholder rows have no image to measure at all
+    return { w: 4, h: 5 };
+  }
+
+  type Placement = { photo: Photo; x: number; y: number; w: number; h: number };
+
+  // Justified rows (Google Photos-style): fill each row with photos at a
+  // shared *target* height until they'd overflow the container width,
+  // then scale that whole row — every photo in it, together, by the same
+  // factor — until it fills the width exactly edge to edge. Because every
+  // photo in a row keeps its own exact aspect ratio (only the row's
+  // shared height moves), nothing is ever cropped, and — unlike real
+  // masonry's independent columns — every row is guaranteed to end
+  // flush, every time, since a row's height isn't "done" until its total
+  // width already equals the container's. That's what real masonry can't
+  // promise: a column can come up short at the end with nothing left to
+  // fill it. Trade-off going the other way: an ordinary photo's on-screen
+  // size now depends slightly on which other photos share its row.
+  //
+  // A portrait-oriented photo is the one exception: rather than sizing
+  // its row like any other (a lone tall-and-narrow photo would otherwise
+  // get stretched huge to fill a whole row by itself), it's pinned to
+  // exactly two tile-heights plus the gap between them — as if it always
+  // sat where two stacked landscape tiles would. Every other photo that
+  // joins its row still renders at its own exact aspect ratio at that
+  // pinned height, uncropped; only the portrait itself absorbs whatever
+  // width is left over to keep the row flush, via the same vertical-only
+  // object-fit: cover crop already used wherever a tile's box doesn't
+  // already match its photo's own aspect ratio.
+  function layoutJustified(
+    items: Photo[],
+    containerWidth: number,
+    targetHeight: number
+  ): { placements: Placement[]; totalHeight: number } {
+    const pinnedHeight = targetHeight * 2 + GAP;
+
+    type RowTile = { photo: Photo; w: number };
+    const rows: { tiles: RowTile[]; pinned: boolean }[] = [];
+    let row: RowTile[] = [];
+    let rowWidth = -GAP;
+
+    function flushRow() {
+      if (row.length) rows.push({ tiles: row, pinned: false });
+      row = [];
+      rowWidth = -GAP;
+    }
+
+    let i = 0;
+    while (i < items.length) {
+      const photo = items[i];
+      const { w, h } = naturalAspect(photo);
+
+      if (h > w) {
+        // portrait — always starts a fresh row of its own, sized at
+        // pinnedHeight rather than the shared targetHeight every other
+        // row uses
+        flushRow();
+        const portraitTile: RowTile = { photo, w: 0 }; // width resolved below, once we know what else joins it
+        const companions: RowTile[] = [];
+        let usedWidth = -GAP;
+        i++;
+        while (i < items.length) {
+          const next = items[i];
+          const na = naturalAspect(next);
+          if (na.h > na.w) break; // don't chain two portraits into one row
+          const tileW = pinnedHeight * (na.w / na.h);
+          // always take at least one companion so the portrait doesn't
+          // end up alone filling the entire row width by itself
+          if (usedWidth + GAP + tileW >= containerWidth && companions.length > 0) break;
+          companions.push({ photo: next, w: tileW });
+          usedWidth += tileW + GAP;
+          i++;
+        }
+        // every companion keeps its exact natural width; the portrait
+        // absorbs whatever's left so the row is flush regardless
+        const companionsWidth = companions.reduce((sum, t) => sum + t.w, 0);
+        const gapCount = companions.length; // one gap before each companion
+        const remaining = containerWidth - GAP * gapCount - companionsWidth;
+        // a floor keeps a freak near-full companion set from crushing the
+        // portrait down to nothing
+        portraitTile.w = Math.max(remaining, pinnedHeight * 0.2);
+        rows.push({ tiles: [portraitTile, ...companions], pinned: true });
+        continue;
+      }
+
+      const tileWidth = targetHeight * (w / h);
+      row.push({ photo, w: tileWidth });
+      rowWidth += tileWidth + GAP;
+      if (rowWidth >= containerWidth) flushRow();
+      i++;
+    }
+    // a trailing partial (non-pinned) row is left at the target height,
+    // not stretched to fill the width — stretching just 1-2 leftover
+    // photos to fill an entire row's width would blow them up far larger
+    // than every other photo on the page
+    flushRow();
+
+    const placements: Placement[] = [];
+    let y = 0;
+    for (let ri = 0; ri < rows.length; ri++) {
+      const { tiles, pinned } = rows[ri];
+      if (pinned) {
+        // never rescaled — that's the whole point of pinning it
+        let x = 0;
+        for (const { photo, w } of tiles) {
+          placements.push({ photo, x, y, w, h: pinnedHeight });
+          x += w + GAP;
+        }
+        y += pinnedHeight + GAP;
+        continue;
+      }
+      const isLast = ri === rows.length - 1;
+      const naturalRowWidth = tiles.reduce((sum, t) => sum + t.w, 0) + GAP * (tiles.length - 1);
+      const scale = isLast ? 1 : (containerWidth - GAP * (tiles.length - 1)) / (naturalRowWidth - GAP * (tiles.length - 1));
+      const rowHeight = targetHeight * scale;
+      let x = 0;
+      for (const { photo, w } of tiles) {
+        const tileWidth = w * scale;
+        placements.push({ photo, x, y, w: tileWidth, h: rowHeight });
+        x += tileWidth + GAP;
+      }
+      y += rowHeight + GAP;
+    }
+
+    return { placements, totalHeight: Math.max(0, y - GAP) };
+  }
+
+  // builds one absolutely-positioned justified-row <div class="tile-grid">
+  // of photo buttons inside `container` (which must already be attached
+  // to the document — clientWidth reads 0 otherwise). Unlike real
+  // masonry, justified rows fills strictly in `items`' own order, row by
+  // row, left to right — so DOM order already matches on-screen reading
+  // order with no separate bookkeeping needed for lightbox nav.
+  function buildTileGrid(container: HTMLDivElement, items: Photo[]): void {
+    const containerWidth = container.clientWidth;
+    // aim for roughly 3 reference (3:2) tiles per row on desktop, 2 on
+    // mobile — matches the old fixed-column breakpoint's general sizing,
+    // even though row composition (and so each tile's exact size) now
+    // varies with which photos land together
+    const targetCols = window.innerWidth < 700 ? 2 : 3;
+    const targetHeight = (containerWidth - GAP * (targetCols - 1)) / targetCols / REFERENCE_ASPECT;
+    const { placements, totalHeight } = layoutJustified(items, containerWidth, targetHeight);
+
+    container.style.position = "relative";
+    container.style.height = totalHeight + "px";
+
+    for (const { photo, x, y, w, h } of placements) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tile";
+      btn.style.position = "absolute";
+      btn.style.left = x + "px";
+      btn.style.top = y + "px";
+      btn.style.width = w + "px";
+      btn.style.height = h + "px";
+      if (photo.image) {
+        const img = document.createElement("img");
+        img.src = photo.image;
+        img.alt = "";
+        img.loading = "lazy";
+        btn.appendChild(img);
+      } else {
+        btn.classList.add("tile-color");
+        btn.style.background = photo.color ?? "";
+      }
+      btn.dataset.id = photo.id;
+      btn.setAttribute("aria-label", `${photo.location}, ${photo.date}`);
+      btn.addEventListener("click", () => openLightbox(photo));
+      container.appendChild(btn);
+    }
   }
 
   function render() {
@@ -643,34 +863,6 @@ for (const p of sorted) {
         return sortDir === "oldest" ? batchCmp : -batchCmp;
       });
     }
-    visiblePhotos = filtered;
-
-    // builds one <div class="tile-grid"> of photo buttons
-    function buildTileGrid(items: Photo[]): HTMLDivElement {
-      const tileGrid = document.createElement("div");
-      tileGrid.className = "tile-grid";
-      for (const p of items) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "tile";
-        if (p.image) {
-          const img = document.createElement("img");
-          img.src = p.image;
-          img.alt = "";
-          img.loading = "lazy";
-          btn.appendChild(img);
-        } else {
-          btn.classList.add("tile-color");
-          btn.style.background = p.color ?? "";
-        }
-        btn.dataset.id = p.id;
-        btn.setAttribute("aria-label", `${p.location}, ${p.date}`);
-        btn.addEventListener("click", () => openLightbox(p));
-        tileGrid.appendChild(btn);
-      }
-      return tileGrid;
-    }
-
     grid.innerHTML = "";
 
     if (filtered.length === 0) {
@@ -681,15 +873,20 @@ for (const p of sorted) {
           ? "No photos yet — run npm run tag-photos to add some."
           : "No photos match these filters.";
       grid.appendChild(empty);
+      visiblePhotos = [];
     } else if (sortDir === "shuffle") {
       // shuffled order doesn't get year/month dividers — randomly
       // interspersed one-photo groups would be more confusing than
       // useful, so it's just one flat, ungrouped grid instead. It gets
       // the .shuffle-grid class so CSS can add back the top space the
       // (skipped) year/month header would otherwise have taken.
-      const tileGrid = buildTileGrid(filtered);
-      tileGrid.classList.add("shuffle-grid");
+      const tileGrid = document.createElement("div");
+      tileGrid.className = "tile-grid shuffle-grid";
+      // append before building — buildTileGrid measures clientWidth,
+      // which only reads real once the element is attached to the DOM
       grid.appendChild(tileGrid);
+      buildTileGrid(tileGrid, filtered);
+      visiblePhotos = filtered;
     } else {
       type MonthGroup = { month: string; items: Photo[] };
       type YearGroup = { year: string; months: MonthGroup[] };
@@ -719,6 +916,9 @@ for (const p of sorted) {
         row.className = "year-row";
         row.innerHTML = `<span class="num">${g.year}</span><span class="line"></span>`;
         block.appendChild(row);
+        // attach the block (and its year-row) to the live document now,
+        // before any tile-grid inside it needs to measure its width
+        grid.appendChild(block);
 
         for (const m of g.months) {
           if (m.month) {
@@ -728,20 +928,18 @@ for (const p of sorted) {
             label.textContent = MONTHS[idx] ?? m.month;
             block.appendChild(label);
           }
-          block.appendChild(buildTileGrid(m.items));
+          const tileGrid = document.createElement("div");
+          tileGrid.className = "tile-grid";
+          block.appendChild(tileGrid);
+          buildTileGrid(tileGrid, m.items);
         }
-        grid.appendChild(block);
       }
+      // justified rows fills strictly in `filtered`'s own order (row by
+      // row, left to right, group by group) — DOM order already matches
+      // on-screen reading order, so no separate bookkeeping is needed
+      // for lightbox arrow-key/swipe nav here
+      visiblePhotos = filtered;
     }
-  }
-
-  // wire up the tiles that were rendered server-side, for the very first
-  // paint (before any filter/sort interaction triggers a client re-render)
-  function wireInitialTiles() {
-    grid.querySelectorAll<HTMLButtonElement>(".tile").forEach((btn) => {
-      const photo = photos.find((p) => p.id === btn.dataset.id);
-      if (photo) btn.addEventListener("click", () => openLightbox(photo));
-    });
   }
 
   const lightbox = document.getElementById("lightbox")!;
@@ -857,6 +1055,8 @@ for (const p of sorted) {
     sortOldestBtn.classList.add("active");
     sortNewestBtn.classList.remove("active");
     shuffleBtn.classList.remove("active");
+    shuffleBtn.title = "Shuffle";
+    shuffleBtn.setAttribute("aria-label", "Shuffle");
     render();
   });
   sortNewestBtn.addEventListener("click", () => {
@@ -864,6 +1064,8 @@ for (const p of sorted) {
     sortNewestBtn.classList.add("active");
     sortOldestBtn.classList.remove("active");
     shuffleBtn.classList.remove("active");
+    shuffleBtn.title = "Shuffle";
+    shuffleBtn.setAttribute("aria-label", "Shuffle");
     render();
   });
   shuffleBtn.addEventListener("click", () => {
@@ -873,8 +1075,49 @@ for (const p of sorted) {
     shuffleBtn.classList.add("active");
     sortOldestBtn.classList.remove("active");
     sortNewestBtn.classList.remove("active");
+    // once you're already shuffled, the button's own job changes from
+    // "turn shuffle on" to "shuffle again" — say so
+    shuffleBtn.title = "Shuffle again";
+    shuffleBtn.setAttribute("aria-label", "Shuffle again");
     render();
+
+    // restart the spin even on back-to-back clicks: remove the class,
+    // force a reflow so the browser forgets the animation ran, then add
+    // it back
+    shuffleBtn.classList.remove("spin");
+    void shuffleBtn.offsetWidth;
+    shuffleBtn.classList.add("spin");
   });
 
-  wireInitialTiles();
+  // justified-row widths depend on the container's actual pixel width,
+  // so the very first layout has to happen here in JS, not server-side —
+  // this replaces the server-rendered fallback grid with the real
+  // justified layout on load. A brief reflow right after the page
+  // appears is the normal, expected cost of that (there's no way to know
+  // the exact pixel width before the browser has a real viewport to
+  // measure).
+  render();
+
+  // re-pack on resize — the target row height (2 reference tiles per row
+  // under 700px, 3 above) and every row's actual width can both change,
+  // so positions need recomputing; a full render() rebuild is simplest
+  // and cheap enough at this photo count. Debounced so dragging a window
+  // edge doesn't thrash it.
+  //
+  // Mobile browsers also fire "resize" whenever the address bar
+  // collapses/expands while scrolling — that only changes viewport
+  // *height*, never width. Re-running render() (which clears and rebuilds
+  // every tile) on one of those mid-scroll is what was rubber-banding the
+  // page back to the top: the grid's total height briefly changes while
+  // the browser's momentum scroll is still tracking the old one, and it
+  // snaps back. The justified-row layout only actually depends on width,
+  // so ignore resizes that don't change it.
+  let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+  let lastWidth = window.innerWidth;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 150);
+  });
 </script>

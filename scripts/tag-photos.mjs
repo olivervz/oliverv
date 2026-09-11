@@ -46,7 +46,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const CSV_PATH = path.join(ROOT, "src/data/photos.csv");
 const PHOTOS_DIR = path.join(ROOT, "public/photos");
-const HEADER = ["id", "date", "batch", "camera", "film", "location", "notes", "image", "color"];
+const HEADER = ["id", "date", "batch", "title", "camera", "film", "location", "notes", "image", "width", "height", "color", "flagged"];
 const IMAGE_EXT = new Set([
   ".jpg", ".jpeg", ".png", ".heic", ".heif", ".tif", ".tiff", ".webp", ".gif",
 ]);
@@ -349,13 +349,25 @@ async function main() {
       {
         type: "text",
         name: "date",
-        message: "Date (YYYY or YYYY-MM)",
-        validate: (v) => (/^\d{4}(-\d{2})?$/.test(v.trim()) ? true : "Use YYYY or YYYY-MM"),
+        message: "Date (YYYY-MM-DD) — never shown, just keeps photos ordered",
+        initial: new Date().toISOString().slice(0, 10),
+        validate: (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v.trim()) ? true : "Use YYYY-MM-DD"),
+      },
+      {
+        type: "text",
+        name: "title",
+        message: 'Title for this batch (e.g. "Snowstorm 2026") — not shown anywhere, just for your own reference',
       },
     ],
     PROMPT_OPTS
   );
-  if (batch.camera === undefined || batch.film === undefined || batch.date === undefined) return;
+  if (
+    batch.camera === undefined ||
+    batch.film === undefined ||
+    batch.date === undefined ||
+    batch.title === undefined
+  )
+    return;
   rememberChoice(cameraChoices, batch.camera);
   rememberChoice(filmChoices, batch.film);
 
@@ -451,7 +463,10 @@ async function main() {
 
     const id = uniqueId(path.basename(file, path.extname(file)), existingIds);
     const destName = `${id}.jpg`; // always .jpg out — see MAX_LONG_EDGE comment above
-    await sharp(path.join(inputDir, file))
+    // toFile()'s resolved info carries the *actual output* pixel size (post
+    // EXIF-rotate, post-resize) — exactly what the site's masonry layout
+    // needs, and free since we're already resizing here.
+    const { width: outWidth, height: outHeight } = await sharp(path.join(inputDir, file))
       .rotate() // apply EXIF orientation before resizing, then this drops the tag
       .resize({
         width: MAX_LONG_EDGE,
@@ -466,12 +481,16 @@ async function main() {
       id,
       batch.date.trim(),
       batchNumber,
+      batch.title.trim(),
       batch.camera,
       batch.film,
       answers.location,
       answers.notes ?? "",
       `/photos/${destName}`,
+      outWidth,
+      outHeight,
       "",
+      "", // flagged — set via `npm run review-photos`, not at tagging time
     ]);
 
     tagged++;
