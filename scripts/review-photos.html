@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Review photos</title>
+<style>
+  :root {
+    --bg: #1b201f;
+    --panel: #232a28;
+    --ink: #ede6d8;
+    --accent: #7fa396;
+    --danger: #c97b6e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid rgba(237, 230, 216, 0.12);
+  }
+  header h1 {
+    font-size: 16px;
+    margin: 0;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    opacity: 0.6;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+  }
+  .controls label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .count {
+    opacity: 0.7;
+  }
+  main {
+    padding: 20px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    position: relative;
+    background: var(--panel);
+    border: 1.5px solid rgba(237, 230, 216, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s ease, opacity 0.2s ease;
+  }
+  .tile.flagged {
+    border-color: var(--danger);
+  }
+  .tile.dragover {
+    border-color: var(--accent);
+    border-style: dashed;
+  }
+  .tile.hidden-by-filter {
+    display: none;
+  }
+  .tile img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* preserve natural aspect ratio — cropping here would hide exactly the
+       tilt/crop problems this tool exists to spot */
+  }
+  .tile .caption {
+    padding: 6px 8px 7px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .tile .caption .loc {
+    font-weight: 600;
+  }
+  .tile .caption .id {
+    opacity: 0.45;
+    font-size: 10px;
+    display: block;
+    word-break: break-all;
+  }
+  .flag-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(20, 22, 21, 0.6);
+    color: rgba(237, 230, 216, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(3px);
+  }
+  .flag-btn:hover {
+    background: rgba(20, 22, 21, 0.85);
+    color: var(--ink);
+  }
+  .tile.flagged .flag-btn {
+    background: var(--danger);
+    color: #1b201f;
+  }
+  .tile .status {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 22, 21, 0.72);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    padding: 10px;
+  }
+  .tile.busy .status,
+  .tile.error .status,
+  .tile.done .status {
+    display: flex;
+  }
+  .tile.error .status {
+    color: var(--danger);
+  }
+  .tile.done .status {
+    color: var(--accent);
+  }
+  .empty {
+    opacity: 0.5;
+    font-size: 14px;
+    padding: 40px 0;
+    text-align: center;
+  }
+  .hint {
+    max-width: 640px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="hint">
+      <h1>Review photos</h1>
+      <p>Click the flag on any photo to mark it for a re-crop/re-tilt later. Drag a corrected image onto any photo (flagged or not) to swap it in right now — same spot on the site, same metadata, new pixels.</p>
+    </div>
+    <div class="controls">
+      <span class="count" id="count"></span>
+      <label><input type="checkbox" id="filter-flagged" /> Show only flagged</label>
+    </div>
+  </header>
+  <main>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>No photos match.</p>
+  </main>
+
+  <script>
+    let photos = [];
+    let showFlaggedOnly = false;
+
+    const grid = document.getElementById("grid");
+    const countEl = document.getElementById("count");
+    const emptyEl = document.getElementById("empty");
+    const filterCheckbox = document.getElementById("filter-flagged");
+
+    const FLAG_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`;
+
+    async function loadPhotos() {
+      const res = await fetch("/api/photos");
+      photos = await res.json();
+      render();
+    }
+
+    function updateCount() {
+      const flaggedCount = photos.filter((p) => p.flagged).length;
+      countEl.textContent = `${photos.length} photos · ${flaggedCount} flagged`;
+    }
+
+    function render() {
+      updateCount();
+      grid.innerHTML = "";
+      const visible = photos.filter((p) => !showFlaggedOnly || p.flagged);
+      emptyEl.hidden = visible.length > 0;
+      for (const photo of visible) {
+        grid.appendChild(buildTile(photo));
+      }
+    }
+
+    function buildTile(photo) {
+      const tile = document.createElement("div");
+      tile.className = "tile" + (photo.flagged ? " flagged" : "");
+      tile.dataset.id = photo.id;
+
+      const img = document.createElement("img");
+      img.src = photo.image + "?t=" + (photo.updatedAt || 0);
+      img.alt = "";
+      img.loading = "lazy";
+      tile.appendChild(img);
+
+      const flagBtn = document.createElement("button");
+      flagBtn.type = "button";
+      flagBtn.className = "flag-btn";
+      flagBtn.innerHTML = FLAG_ICON;
+      flagBtn.title = photo.flagged ? "Unflag" : "Flag for replacement";
+      flagBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFlag(photo, tile, flagBtn);
+      });
+      tile.appendChild(flagBtn);
+
+      const caption = document.createElement("div");
+      caption.className = "caption";
+      caption.innerHTML = `<span class="loc">${escapeHtml(photo.location || "—")}</span><span class="id">${escapeHtml(photo.id)}</span>`;
+      tile.appendChild(caption);
+
+      const status = document.createElement("div");
+      status.className = "status";
+      tile.appendChild(status);
+
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.hidden = true;
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files[0]) replacePhoto(photo, tile, img, status, fileInput.files[0]);
+        fileInput.value = "";
+      });
+      tile.appendChild(fileInput);
+
+      tile.addEventListener("click", () => fileInput.click());
+
+      tile.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        tile.classList.add("dragover");
+      });
+      tile.addEventListener("dragleave", () => tile.classList.remove("dragover"));
+      tile.addEventListener("drop", (e) => {
+        e.preventDefault();
+        tile.classList.remove("dragover");
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) replacePhoto(photo, tile, img, status, file);
+      });
+
+      return tile;
+    }
+
+    async function toggleFlag(photo, tile, flagBtn) {
+      const next = !photo.flagged;
+      flagBtn.disabled = true;
+      try {
+        const res = await fetch(
+          `/api/flag?id=${encodeURIComponent(photo.id)}&flagged=${next ? "1" : "0"}`,
+          { method: "POST" }
+        );
+        if (!res.ok) throw new Error(await res.text());
+        photo.flagged = next;
+        tile.classList.toggle("flagged", next);
+        flagBtn.title = next ? "Unflag" : "Flag for replacement";
+        updateCount();
+        if (showFlaggedOnly && !next) render(); // it just dropped out of the filtered view
+      } catch (err) {
+        alert("Couldn't update flag: " + err.message);
+      } finally {
+        flagBtn.disabled = false;
+      }
+    }
+
+    async function replacePhoto(photo, tile, img, status, file) {
+      tile.classList.add("busy");
+      tile.classList.remove("error", "done");
+      status.textContent = "Replacing…";
+      try {
+        const res = await fetch(`/api/replace?id=${encodeURIComponent(photo.id)}`, {
+          method: "POST",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        });
+        if (!res.ok) throw new Error(await res.text());
+        photo.updatedAt = Date.now();
+        photo.flagged = false;
+        img.src = photo.image + "?t=" + photo.updatedAt;
+        tile.classList.remove("busy", "flagged");
+        tile.classList.add("done");
+        status.textContent = "Replaced ✓";
+        updateCount();
+        setTimeout(() => {
+          tile.classList.remove("done");
+          if (showFlaggedOnly) render();
+        }, 1400);
+      } catch (err) {
+        tile.classList.remove("busy");
+        tile.classList.add("error");
+        status.textContent = "Failed — " + err.message;
+        setTimeout(() => tile.classList.remove("error"), 3000);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+    }
+
+    filterCheckbox.addEventListener("change", () => {
+      showFlaggedOnly = filterCheckbox.checked;
+      render();
+    });
+
+    loadPhotos();
+  </script>
+</body>
+</html>

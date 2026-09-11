@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grid layout options</title>
+<style>
+  :root {
+    --bg: #ede6d8;
+    --ink: #3b5954;
+    --accent: #7fa396;
+    --content-max: 1080px;
+    --gutter: 24px;
+    --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+  }
+  main {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 32px var(--gutter) 60px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .intro {
+    font-size: 14px;
+    opacity: 0.65;
+    max-width: 620px;
+    margin: 0 0 40px;
+  }
+  section {
+    margin-bottom: 48px;
+  }
+  h2 {
+    font-size: 16px;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .badge.crop { background: color-mix(in srgb, #c97b6e 20%, transparent); color: #c97b6e; }
+  .badge.nocrop { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
+  .caption {
+    font-size: 13px;
+    opacity: 0.6;
+    margin: 0 0 16px;
+    max-width: 620px;
+  }
+  .tile {
+    position: absolute;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .tile .label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.92);
+    background: rgba(0,0,0,0.28);
+    padding: 3px 6px;
+    margin: 5px;
+    border-radius: 3px;
+    font-family: var(--font);
+  }
+  .tile.portrait { outline: 2.5px solid #c97b6e; outline-offset: -2.5px; }
+
+  #justified-wrap, #masonry-wrap {
+    position: relative;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+  <main>
+    <h1>Two ways to close the gap</h1>
+    <p class="intro">
+      Same 16 photos (14 landscape, 2 portrait — outlined in orange so
+      they're easy to spot) laid out both ways, at the same column count
+      as the real site. Colors stand in for actual photos so the layout
+      mechanics are easy to see.
+    </p>
+
+    <section>
+      <h2>Option 1 — Justified rows <span class="badge crop">slight crop</span></h2>
+      <p class="caption">
+        Every row is scaled to a shared height that fills the width edge to edge — no gaps, ever.
+        To make that math work with a portrait mixed into a row, a sliver gets trimmed off the
+        sides of a couple photos (look closely at the edges of the outlined tiles).
+      </p>
+      <div id="justified-wrap"></div>
+    </section>
+
+    <section>
+      <h2>Option 2 — Real masonry <span class="badge nocrop">zero crop</span></h2>
+      <p class="caption">
+        Each photo drops into whichever column has the most room, at its exact natural
+        aspect ratio — nothing is ever trimmed. Gaps only ever show up at the very bottom
+        of a column, never in the middle of the grid.
+      </p>
+      <div id="masonry-wrap"></div>
+    </section>
+  </main>
+
+  <script>
+    const COLORS = [
+      "#7c9a8e", "#a68a6d", "#8a7ca6", "#6d95a6", "#a67c8a",
+      "#8ca67c", "#a6947c", "#7c8ea6", "#a67c94", "#7ca694",
+      "#94a67c", "#a6867c", "#7c94a6", "#c9a37c", "#7cb0a6", "#b07ca6",
+    ];
+
+    // 14 landscape (3:2, the common film-scan ratio), 2 portrait (2:3),
+    // in a fairly typical shuffled order so a portrait lands mid-row
+    const items = [
+      { w: 3, h: 2, label: "L1" },
+      { w: 3, h: 2, label: "L2" },
+      { w: 2, h: 3, label: "P1", portrait: true },
+      { w: 3, h: 2, label: "L3" },
+      { w: 3, h: 2, label: "L4" },
+      { w: 3, h: 2, label: "L5" },
+      { w: 3, h: 2, label: "L6" },
+      { w: 3, h: 2, label: "L7" },
+      { w: 2, h: 3, label: "P2", portrait: true },
+      { w: 3, h: 2, label: "L8" },
+      { w: 3, h: 2, label: "L9" },
+      { w: 3, h: 2, label: "L10" },
+      { w: 3, h: 2, label: "L11" },
+      { w: 3, h: 2, label: "L12" },
+      { w: 3, h: 2, label: "L13" },
+      { w: 3, h: 2, label: "L14" },
+    ].map((item, i) => ({ ...item, color: COLORS[i % COLORS.length] }));
+
+    function makeTile(item) {
+      const el = document.createElement("div");
+      el.className = "tile" + (item.portrait ? " portrait" : "");
+      el.style.background = item.color;
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = item.label;
+      el.appendChild(label);
+      return el;
+    }
+
+    // ---------- Option 1: justified rows ----------
+    function layoutJustified(wrap, items, containerWidth, targetHeight, gap) {
+      wrap.innerHTML = "";
+      const rows = [];
+      let row = [];
+      let rowWidth = -gap;
+      for (const item of items) {
+        const w = targetHeight * (item.w / item.h);
+        row.push({ item, w });
+        rowWidth += w + gap;
+        if (rowWidth >= containerWidth) {
+          rows.push(row);
+          row = [];
+          rowWidth = -gap;
+        }
+      }
+      if (row.length) rows.push(row); // last row — left at natural size, not stretched
+
+      let y = 0;
+      rows.forEach((row, i) => {
+        const isLast = i === rows.length - 1;
+        const naturalWidth = row.reduce((sum, r) => sum + r.w, 0) + gap * (row.length - 1);
+        const scale = isLast ? 1 : (containerWidth - gap * (row.length - 1)) / (naturalWidth - gap * (row.length - 1));
+        const rowHeight = targetHeight * scale;
+        let x = 0;
+        for (const { item, w } of row) {
+          const tileWidth = w * scale;
+          const el = makeTile(item);
+          el.style.left = x + "px";
+          el.style.top = y + "px";
+          el.style.width = tileWidth + "px";
+          el.style.height = rowHeight + "px";
+          wrap.appendChild(el);
+          x += tileWidth + gap;
+        }
+        y += rowHeight + gap;
+      });
+      wrap.style.height = y - gap + "px";
+    }
+
+    // ---------- Option 2: real masonry (greedy shortest-column) ----------
+    function layoutMasonry(wrap, items, containerWidth, numCols, gap) {
+      wrap.innerHTML = "";
+      const colWidth = (containerWidth - gap * (numCols - 1)) / numCols;
+      const colHeights = new Array(numCols).fill(0);
+      for (const item of items) {
+        let col = 0;
+        for (let i = 1; i < numCols; i++) if (colHeights[i] < colHeights[col]) col = i;
+        const tileHeight = colWidth * (item.h / item.w);
+        const el = makeTile(item);
+        el.style.left = col * (colWidth + gap) + "px";
+        el.style.top = colHeights[col] + "px";
+        el.style.width = colWidth + "px";
+        el.style.height = tileHeight + "px";
+        wrap.appendChild(el);
+        colHeights[col] += tileHeight + gap;
+      }
+      wrap.style.height = Math.max(...colHeights) - gap + "px";
+    }
+
+    function render() {
+      const containerWidth = document.getElementById("justified-wrap").clientWidth;
+      layoutJustified(document.getElementById("justified-wrap"), items, containerWidth, 150, 10);
+      layoutMasonry(document.getElementById("masonry-wrap"), items, containerWidth, 3, 10);
+    }
+
+    render();
+    window.addEventListener("resize", render);
+  </script>
+</body>
+</html>
