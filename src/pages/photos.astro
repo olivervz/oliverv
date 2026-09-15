@@ -51,7 +51,7 @@ for (const p of sorted) {
 
     <div class="controls">
       <div class="filters">
-        <div class="field select-field" data-filter="camera">
+        <div class="select-field" data-filter="camera">
           <button type="button" class="field-trigger" aria-haspopup="listbox" aria-expanded="false">
             <span class="label">Camera</span>
             <span class="field-value">All</span>
@@ -62,7 +62,7 @@ for (const p of sorted) {
             {cameras.map((c) => <li role="option" data-value={c} aria-selected="false">{c}</li>)}
           </ul>
         </div>
-        <div class="field select-field" data-filter="film">
+        <div class="select-field" data-filter="film">
           <button type="button" class="field-trigger" aria-haspopup="listbox" aria-expanded="false">
             <span class="label">Film</span>
             <span class="field-value">All</span>
@@ -73,7 +73,7 @@ for (const p of sorted) {
             {films.map((f) => <li role="option" data-value={f} aria-selected="false">{f}</li>)}
           </ul>
         </div>
-        <div class="field select-field" data-filter="location">
+        <div class="select-field" data-filter="location">
           <button type="button" class="field-trigger" aria-haspopup="listbox" aria-expanded="false">
             <span class="label">Location</span>
             <span class="field-value">All</span>
@@ -124,7 +124,7 @@ for (const p of sorted) {
                 {m.items.map((p) => (
                   <button
                     type="button"
-                    class={`tile${p.image ? "" : " tile-color"}`}
+                    class={`tile${p.image ? "" : " tile-color"}${p.width && p.height && p.height > p.width ? " tile-portrait" : ""}`}
                     style={p.image ? undefined : `background:${p.color}`}
                     data-id={p.id}
                     aria-label={`${p.location}, ${p.date}`}
@@ -201,8 +201,13 @@ for (const p of sorted) {
     flex-wrap: wrap;
   }
 
-  /* custom dropdown replacing the native <select> — the closed "pill"
-     look was already fine (that's just .field below); the native
+  /* custom dropdown replacing the native <select>. This wrapper is
+     purely a positioning context for the menu below — it deliberately
+     does NOT also carry the site-wide .field pill styling (border,
+     padding, background), only .field-trigger does. Applying .field to
+     both this wrapper and the trigger button inside it was the previous
+     bug: two nested boxes each drawing their own border/padding reads
+     as one thick double-outlined pill instead of one. The native
      dropdown *panel* that used to open under it was unstyleable OS
      chrome (grey on most platforms, ignores our theme entirely), so
      this is a real, from-scratch listbox instead. */
@@ -232,6 +237,18 @@ for (const p of sorted) {
   .field-trigger:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* the wrapping .select-field div carries no border/padding of its own
+     (see the comment above it) — this replaces the site-wide .field
+     .label rule that used to style this span via the wrapper, which no
+     longer applies now that the wrapper isn't a .field. */
+  .field-trigger .label {
+    opacity: 0.55;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
 
   .field-value {
@@ -410,24 +427,39 @@ for (const p of sorted) {
     margin-top: 0;
   }
 
-  /* Justified rows (see layoutJustified() below) are computed in JS, not
-     CSS — a browser has to know the container's actual pixel width to
-     scale each row to fill it edge to edge, which isn't knowable at
-     build time or expressible in pure CSS. So this grid rule is only
-     ever seen for the briefest instant before the client script below
-     runs render() and replaces it with absolutely-positioned tiles (see
-     buildTileGrid()) — kept as a reasonable fallback for that instant
-     (and for no-JS) rather than left blank. */
+  /* establishes the container-query context .tile-grid uses just below
+     to size its rows off its own on-screen width, with no JS resize
+     listener needed — safe to query against since none of
+     .photo-grid's descendants (.year-block, .tile-grid) add horizontal
+     padding of their own, so its inline size always exactly matches
+     .tile-grid's own width. */
+  .photo-grid {
+    container-type: inline-size;
+  }
+
+  /* Fixed grid: always 3 columns (2 on narrow phones, see the media
+     query below) — every tile is exactly one column wide, and a
+     landscape tile is exactly one row tall; a portrait tile spans two
+     rows (see .tile-portrait below), so it reads as one landscape-width
+     tile that's exactly two landscape-heights + the gap between them
+     tall, per spec. Row height is a container query length (cqw), not
+     JS, so this stays correct at any viewport size / column count with
+     no resize listener at all — nothing needs recomputing when, say,
+     the mobile address bar shows/hides mid-scroll. */
   .tile-grid {
+    --cols: 3;
+    --gap: 14px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    align-items: start;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    gap: var(--gap);
+    /* landscape (3:2) tile height at the current column width:
+       colWidth * 2/3, where colWidth = (100cqw - gaps) / cols */
+    grid-auto-rows: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 / 3);
   }
 
   @media (max-width: 700px) {
     .tile-grid {
-      grid-template-columns: repeat(2, 1fr);
+      --cols: 2;
     }
   }
 
@@ -443,7 +475,7 @@ for (const p of sorted) {
   .tile {
     display: block;
     width: 100%;
-    aspect-ratio: 3 / 2;
+    height: 100%;
     border: none;
     padding: 0;
     cursor: pointer;
@@ -451,12 +483,9 @@ for (const p of sorted) {
     transition: transform 0.2s ease, opacity 0.4s ease;
   }
 
-  /* JS sets each tile's actual box size (see buildTileGrid()): natural
-     height for an ordinary photo, capped for an outlier-tall one. Either
-     way object-fit: cover fills that exact box — when the box already
-     matches the image's own aspect ratio (the ordinary case) cover
-     crops nothing at all; it only ever trims a capped tile, and only
-     off the top/bottom (the box is always full column width). */
+  /* every tile fills its grid cell exactly (see .tile-grid's
+     grid-auto-rows above) — object-fit: cover keeps an ordinary
+     landscape photo's own crop looking natural within that cell. */
   .tile img {
     display: block;
     width: 100%;
@@ -464,10 +493,18 @@ for (const p of sorted) {
     object-fit: cover;
   }
 
-  /* legacy color-only placeholder rows (no real image, no width/height
-     on file) have no natural aspect ratio to fall back on */
-  .tile.tile-color {
-    aspect-ratio: 4 / 5;
+  /* spans two rows (see .tile-grid's grid-auto-rows above), so it reads
+     as one landscape-width tile that's two landscape-heights + the row
+     gap tall. That box's aspect ratio won't generally match the photo's
+     own, so this stretches the image to fill it rather than cropping —
+     full photo over a cropped one, with slight distortion as the
+     explicitly-accepted tradeoff. */
+  .tile-portrait {
+    grid-row: span 2;
+  }
+
+  .tile-portrait img {
+    object-fit: fill;
   }
 
   .tile:hover {
@@ -834,190 +871,32 @@ for (const p of sorted) {
     return y;
   }
 
-  // ---------- justified-row layout ----------
-
-  const GAP = 14; // px between tiles, matches the old CSS grid gap
-  // standard 35mm landscape frame (3:2) — used only to pick a reasonable
-  // *target* row height (see buildTileGrid) and as the fallback aspect
-  // for a real photo that's somehow missing its stored width/height
-  const REFERENCE_ASPECT = 3 / 2;
-
-  function naturalAspect(photo: Photo): { w: number; h: number } {
-    if (photo.width && photo.height) return { w: photo.width, h: photo.height };
-    // every real (image-backed) photo has stored dimensions as of this
-    // build — this branch is just a safety net, not the normal path
-    if (photo.image) return { w: 3, h: 2 };
-    // legacy color-only placeholder rows have no image to measure at all
-    return { w: 4, h: 5 };
-  }
-
-  type Placement = { photo: Photo; x: number; y: number; w: number; h: number };
-
-  // Justified rows (Google Photos-style): fill each row with photos at a
-  // shared *target* height until they'd overflow the container width,
-  // then scale that whole row — every photo in it, together, by the same
-  // factor — until it fills the width exactly edge to edge. Because every
-  // photo in a row keeps its own exact aspect ratio (only the row's
-  // shared height moves), nothing is ever cropped, and — unlike real
-  // masonry's independent columns — every row is guaranteed to end
-  // flush, every time, since a row's height isn't "done" until its total
-  // width already equals the container's. That's what real masonry can't
-  // promise: a column can come up short at the end with nothing left to
-  // fill it. Trade-off going the other way: an ordinary photo's on-screen
-  // size now depends slightly on which other photos share its row.
+  // ---------- tile grid ----------
   //
-  // A portrait-oriented photo is the one exception: rather than sizing
-  // its row like any other (a lone tall-and-narrow photo would otherwise
-  // get stretched huge to fill a whole row by itself), it's pinned to
-  // exactly two tile-heights plus the gap between them — as if it always
-  // sat where two stacked landscape tiles would. Every other photo that
-  // joins its row still renders at its own exact aspect ratio at that
-  // pinned height, uncropped; only the portrait itself absorbs whatever
-  // width is left over to keep the row flush, via the same vertical-only
-  // object-fit: cover crop already used wherever a tile's box doesn't
-  // already match its photo's own aspect ratio.
-  function layoutJustified(
-    items: Photo[],
-    containerWidth: number,
-    targetHeight: number
-  ): { placements: Placement[]; totalHeight: number } {
-    const pinnedHeight = targetHeight * 2 + GAP;
+  // Layout itself is pure CSS now (see .tile-grid / .tile-portrait in
+  // the stylesheet above): a fixed grid, always 3 columns (2 on narrow
+  // phones), sized off the grid's own on-screen width via a container
+  // query length. All this needs to do is create each tile in order and
+  // flag the ones that need to span two rows.
 
-    type RowTile = { photo: Photo; w: number };
-    const rows: { tiles: RowTile[]; pinned: boolean }[] = [];
-    let row: RowTile[] = [];
-    let rowWidth = -GAP;
-
-    function flushRow() {
-      if (row.length) rows.push({ tiles: row, pinned: false });
-      row = [];
-      rowWidth = -GAP;
-    }
-
-    let i = 0;
-    while (i < items.length) {
-      const photo = items[i];
-      const { w, h } = naturalAspect(photo);
-
-      if (h > w) {
-        // portrait — always starts a fresh row of its own, sized at
-        // pinnedHeight rather than the shared targetHeight every other
-        // row uses
-        flushRow();
-        const portraitTile: RowTile = { photo, w: 0 }; // width resolved below, once we know what else joins it
-        const companions: RowTile[] = [];
-        let usedWidth = -GAP;
-        i++;
-        while (i < items.length) {
-          const next = items[i];
-          const na = naturalAspect(next);
-          if (na.h > na.w) break; // don't chain two portraits into one row
-          const tileW = pinnedHeight * (na.w / na.h);
-          // always take at least one companion so the portrait doesn't
-          // end up alone filling the entire row width by itself
-          if (usedWidth + GAP + tileW >= containerWidth && companions.length > 0) break;
-          companions.push({ photo: next, w: tileW });
-          usedWidth += tileW + GAP;
-          i++;
-        }
-        // every companion keeps its exact natural width; the portrait
-        // absorbs whatever's left so the row is flush regardless
-        const companionsWidth = companions.reduce((sum, t) => sum + t.w, 0);
-        const gapCount = companions.length; // one gap before each companion
-        const remaining = containerWidth - GAP * gapCount - companionsWidth;
-        // the portrait's own natural (uncropped) width at pinnedHeight —
-        // capping it here guarantees its box is never proportionally
-        // *wider* than the photo itself, which is what forces
-        // object-fit: cover to crop only off the sides (or nothing, if
-        // it lands exactly at this width) and never off the top/bottom.
-        // A floor still keeps a freak near-full companion set from
-        // crushing it down to nothing.
-        const naturalPortraitWidth = pinnedHeight * (w / h);
-        portraitTile.w = Math.min(Math.max(remaining, pinnedHeight * 0.2), naturalPortraitWidth);
-        // capping the portrait below `remaining` can leave the row a
-        // little short of flush — hand that leftover to its last
-        // companion instead. A gentle top/bottom crop on an ordinary
-        // landscape photo (which usually has headroom to spare) is far
-        // less noticeable than one on a portrait subject, and this keeps
-        // every row on the page exactly as flush as every other.
-        const leftover = remaining - portraitTile.w;
-        if (leftover > 0.5 && companions.length > 0) {
-          companions[companions.length - 1].w += leftover;
-        }
-        rows.push({ tiles: [portraitTile, ...companions], pinned: true });
-        continue;
-      }
-
-      const tileWidth = targetHeight * (w / h);
-      row.push({ photo, w: tileWidth });
-      rowWidth += tileWidth + GAP;
-      if (rowWidth >= containerWidth) flushRow();
-      i++;
-    }
-    // a trailing partial (non-pinned) row is left at the target height,
-    // not stretched to fill the width — stretching just 1-2 leftover
-    // photos to fill an entire row's width would blow them up far larger
-    // than every other photo on the page
-    flushRow();
-
-    const placements: Placement[] = [];
-    let y = 0;
-    for (let ri = 0; ri < rows.length; ri++) {
-      const { tiles, pinned } = rows[ri];
-      if (pinned) {
-        // never rescaled — that's the whole point of pinning it
-        let x = 0;
-        for (const { photo, w } of tiles) {
-          placements.push({ photo, x, y, w, h: pinnedHeight });
-          x += w + GAP;
-        }
-        y += pinnedHeight + GAP;
-        continue;
-      }
-      const isLast = ri === rows.length - 1;
-      const naturalRowWidth = tiles.reduce((sum, t) => sum + t.w, 0) + GAP * (tiles.length - 1);
-      const scale = isLast ? 1 : (containerWidth - GAP * (tiles.length - 1)) / (naturalRowWidth - GAP * (tiles.length - 1));
-      const rowHeight = targetHeight * scale;
-      let x = 0;
-      for (const { photo, w } of tiles) {
-        const tileWidth = w * scale;
-        placements.push({ photo, x, y, w: tileWidth, h: rowHeight });
-        x += tileWidth + GAP;
-      }
-      y += rowHeight + GAP;
-    }
-
-    return { placements, totalHeight: Math.max(0, y - GAP) };
+  function isPortrait(photo: Photo): boolean {
+    // every real (image-backed) photo has stored dimensions as of this
+    // build; missing dimensions (or a legacy color-only placeholder)
+    // fall back to "not portrait" rather than guessing
+    return !!(photo.width && photo.height && photo.height > photo.width);
   }
 
-  // builds one absolutely-positioned justified-row <div class="tile-grid">
-  // of photo buttons inside `container` (which must already be attached
-  // to the document — clientWidth reads 0 otherwise). Unlike real
-  // masonry, justified rows fills strictly in `items`' own order, row by
-  // row, left to right — so DOM order already matches on-screen reading
+  // builds one <div class="tile-grid"> of photo buttons inside
+  // `container`. Fills strictly in `items`' own order — CSS grid's
+  // default (non-dense) auto-placement never reorders items behind ones
+  // already placed, so DOM order already matches on-screen reading
   // order with no separate bookkeeping needed for lightbox nav.
   function buildTileGrid(container: HTMLDivElement, items: Photo[]): void {
-    const containerWidth = container.clientWidth;
-    // aim for roughly 3 reference (3:2) tiles per row on desktop, 2 on
-    // mobile — matches the old fixed-column breakpoint's general sizing,
-    // even though row composition (and so each tile's exact size) now
-    // varies with which photos land together
-    const targetCols = window.innerWidth < 700 ? 2 : 3;
-    const targetHeight = (containerWidth - GAP * (targetCols - 1)) / targetCols / REFERENCE_ASPECT;
-    const { placements, totalHeight } = layoutJustified(items, containerWidth, targetHeight);
-
-    container.style.position = "relative";
-    container.style.height = totalHeight + "px";
-
-    for (const { photo, x, y, w, h } of placements) {
+    for (const photo of items) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "tile";
-      btn.style.position = "absolute";
-      btn.style.left = x + "px";
-      btn.style.top = y + "px";
-      btn.style.width = w + "px";
-      btn.style.height = h + "px";
+      btn.className = photo.image ? "tile" : "tile tile-color";
+      if (isPortrait(photo)) btn.classList.add("tile-portrait");
       if (photo.image) {
         const img = document.createElement("img");
         img.src = photo.image;
@@ -1025,7 +904,6 @@ for (const p of sorted) {
         img.loading = "lazy";
         btn.appendChild(img);
       } else {
-        btn.classList.add("tile-color");
         btn.style.background = photo.color ?? "";
       }
       btn.dataset.id = photo.id;
@@ -1287,35 +1165,14 @@ for (const p of sorted) {
     shuffleFlashTimer = setTimeout(() => shuffleBtn.classList.remove("flash"), 2000);
   });
 
-  // justified-row widths depend on the container's actual pixel width,
-  // so the very first layout has to happen here in JS, not server-side —
-  // this replaces the server-rendered fallback grid with the real
-  // justified layout on load. A brief reflow right after the page
-  // appears is the normal, expected cost of that (there's no way to know
-  // the exact pixel width before the browser has a real viewport to
-  // measure).
+  // filtering/sorting (not layout — that's pure CSS now, see .tile-grid
+  // above) still has to build the initial grid here in JS rather than
+  // server-side, since sort/shuffle state lives client-side.
   render();
 
-  // re-pack on resize — the target row height (2 reference tiles per row
-  // under 700px, 3 above) and every row's actual width can both change,
-  // so positions need recomputing; a full render() rebuild is simplest
-  // and cheap enough at this photo count. Debounced so dragging a window
-  // edge doesn't thrash it.
-  //
-  // Mobile browsers also fire "resize" whenever the address bar
-  // collapses/expands while scrolling — that only changes viewport
-  // *height*, never width. Re-running render() (which clears and rebuilds
-  // every tile) on one of those mid-scroll is what was rubber-banding the
-  // page back to the top: the grid's total height briefly changes while
-  // the browser's momentum scroll is still tracking the old one, and it
-  // snaps back. The justified-row layout only actually depends on width,
-  // so ignore resizes that don't change it.
-  let resizeTimer: ReturnType<typeof setTimeout> | undefined;
-  let lastWidth = window.innerWidth;
-  window.addEventListener("resize", () => {
-    if (window.innerWidth === lastWidth) return;
-    lastWidth = window.innerWidth;
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(render, 150);
-  });
+  // No resize listener needed anymore: row height is a CSS container
+  // query off the grid's own width (see .tile-grid above), so the
+  // browser restyles it automatically on any resize — including the
+  // mobile-address-bar-collapsing kind that used to force a full
+  // render() rebuild and rubber-band the page back to the top mid-scroll.
 </script>
